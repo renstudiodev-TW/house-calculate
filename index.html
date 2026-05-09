@@ -22,7 +22,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .hd{background:linear-gradient(135deg,var(--blue-dark),var(--blue));color:#fff;padding:20px 24px}
 .hd h1{font-size:22px;font-weight:700}
 .hd p{font-size:12px;opacity:.8;margin-top:4px}
-.wrap{max-width:1200px;margin:0 auto;padding:16px}
+.wrap{padding:16px 24px}
 
 /* ── Tabs ── */
 .tabs{display:flex;gap:8px;margin-bottom:16px;background:#fff;padding:8px;border-radius:var(--r);box-shadow:var(--shadow)}
@@ -125,6 +125,16 @@ input[type=number]:disabled{background:var(--gray-50);color:var(--gray-400);curs
 .bkr{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
 .bkr.tot{border-top:1px solid var(--gray-300);margin-top:8px;padding-top:8px;font-weight:700;font-size:14px}
 
+/* ── Editable result box (green) ── */
+.rbox-edit{background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:12px 16px;margin-bottom:12px}
+.rbox-edit .rl{color:var(--green);font-size:11px;font-weight:600;margin-bottom:4px}
+.rbox-edit .rval-input{font-size:30px;font-weight:800;color:var(--green);border:none;background:transparent;width:120px;padding:0;height:auto;line-height:1.2}
+.rbox-edit .rval-input:focus{outline:none;box-shadow:none}
+.rbox-edit .rval-input::-webkit-inner-spin-button,
+.rbox-edit .rval-input::-webkit-outer-spin-button{-webkit-appearance:auto;opacity:1;height:36px}
+.rbox-edit .runit{font-size:13px;color:var(--gray-600)}
+.rbox-edit .rsub{font-size:11px;color:#166534;margin-top:4px;opacity:.8}
+
 /* ── Notes ── */
 .note{background:#fef3c7;border-left:3px solid var(--amber);padding:8px 12px;font-size:11px;color:var(--gray-700);border-radius:0 4px 4px 0;margin-top:8px;line-height:1.6}
 .info{background:#eff6ff;border-left:3px solid var(--blue);padding:8px 12px;font-size:11px;color:var(--gray-700);border-radius:0 4px 4px 0;margin-top:8px;line-height:1.6}
@@ -208,7 +218,9 @@ input[type=range]{flex:1;accent-color:var(--blue)}
 .opt-item::before{content:"→";color:var(--green);flex-shrink:0;font-weight:700}
 
 /* ── Custom setup rows ── */
-.csr{display:grid;grid-template-columns:1fr 150px 28px;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--gray-100)}
+.csr{display:grid;grid-template-columns:1fr auto 28px;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--gray-100)}
+.cs-subtotal{color:var(--teal);font-weight:700;font-size:12px;min-width:72px;text-align:right;white-space:nowrap}
+.setup-hint{background:#fef3c7;border-left:3px solid var(--amber);padding:8px 12px;font-size:11px;color:var(--gray-700);border-radius:0 4px 4px 0;margin-bottom:8px;line-height:1.8}
 .csr input[type=text]{height:var(--input-h);padding:0 10px;border:1px solid var(--gray-300);border-radius:6px;font-size:13px;color:var(--gray-800);width:100%;background:#fff}
 .csr input[type=text]:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 .csr-del{height:var(--input-h);width:28px;border:1px solid var(--gray-200);background:none;border-radius:6px;cursor:pointer;color:var(--gray-400);font-size:14px;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -245,8 +257,8 @@ input[type=range]{flex:1;accent-color:var(--blue)}
 
 <!-- Tabs -->
 <div class="tabs">
-  <div class="tab on" id="tab0" onclick="setType(0)">住宿型<br>精神復健機構</div>
-  <div class="tab"    id="tab1" onclick="setType(1)">日間型<br>精神復健機構</div>
+  <div class="tab on" id="tab0" onclick="setType(0)">住宿型 精神復健機構<br><span style="font-size:11px;font-weight:400;opacity:.75">（康復之家）</span></div>
+  <div class="tab"    id="tab1" onclick="setType(1)">日間型 精神復健機構<br><span style="font-size:11px;font-weight:400;opacity:.75">（社區復健中心）</span></div>
   <div class="tab"    id="tab2" onclick="setType(2)">精神護理之家</div>
 </div>
 
@@ -286,12 +298,13 @@ input[type=range]{flex:1;accent-color:var(--blue)}
         <div><span class="rval" id="maxBeds">30</span> <span class="runit" id="unitLabel">床</span></div>
         <div class="rsub" id="areaRule"></div>
       </div>
-      <div class="fg">
-        <label class="lbl">實際規劃床數 / 服務量<span class="tg fs11"> （不超過法定上限）</span></label>
-        <div class="ig">
-          <input type="number" id="planBeds" value="30" min="1" oninput="calc()">
-          <span class="sfx" id="unitLabel2">床</span>
+      <div class="rbox-edit">
+        <div class="rl">實際規劃床數 / 服務量</div>
+        <div>
+          <input type="number" class="rval-input" id="planBeds" value="30" min="1" oninput="calc(false)">
+          <span class="runit" id="unitLabel2">床</span>
         </div>
+        <div class="rsub">可手動調整，不得超過法定上限</div>
       </div>
       <div class="fg">
         <label class="lbl">入住率 / 服務率</label>
@@ -329,7 +342,7 @@ input[type=range]{flex:1;accent-color:var(--blue)}
     <div class="ch g">人力成本設定</div>
     <div class="cb">
       <!-- burden row — reuses crow style -->
-      <div class="crow" style="margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--gray-200)">
+      <div class="crow" style="padding-bottom:10px;border-bottom:1px solid var(--gray-200)">
         <span class="clabel fw6">勞健保 / 勞退加成</span>
         <div class="cinput">
           <input type="number" id="burden" value="18" min="0" max="50" oninput="recalc()" style="width:60px">
@@ -356,12 +369,12 @@ input[type=range]{flex:1;accent-color:var(--blue)}
         <div class="cinput"><input type="number" id="c_supply" value="10000" oninput="recalc()"><span class="sfx">元/月</span></div></div>
       <div class="crow"><span class="clabel">保險費</span>
         <div class="cinput"><input type="number" id="c_ins"    value="5000"  oninput="recalc()"><span class="sfx">元/月</span></div></div>
-      <div class="crow"><span class="clabel">設備折舊 / 維護</span>
-        <div class="cinput"><input type="number" id="c_equip"  value="8000"  oninput="recalc()"><span class="sfx">元/月</span></div></div>
       <div class="crow"><span class="clabel">行政費用</span>
         <div class="cinput"><input type="number" id="c_admin"  value="5000"  oninput="recalc()"><span class="sfx">元/月</span></div></div>
       <div class="crow"><span class="clabel">其他</span>
         <div class="cinput"><input type="number" id="c_other"  value="5000"  oninput="recalc()"><span class="sfx">元/月</span></div></div>
+      <div id="monthly_custom"></div>
+      <button class="add-item-btn" onclick="addMonthlyItem()">＋ 新增月度項目</button>
       <div class="dv"></div>
       <div class="bkr tot"><span>其他成本小計（月）</span><span id="otherSub">$0</span></div>
     </div>
@@ -373,48 +386,26 @@ input[type=range]{flex:1;accent-color:var(--blue)}
 <div class="card">
   <div class="ch t">前期建置成本（一次性費用）</div>
   <div class="cb">
-    <div class="g2" style="margin-bottom:0">
-      <!-- Hardware / renovation -->
-      <div>
-        <div class="fs12 fw6 tg" style="margin-bottom:8px">硬體 / 裝修</div>
-        <div class="crow"><span class="clabel">裝潢 / 隔間工程</span>
-          <div class="cinput"><input type="number" id="s_reno"     value="500000" oninput="recalc()"><span class="sfx">元</span></div></div>
-        <div class="crow"><span class="clabel">空調系統</span>
-          <div class="cinput"><input type="number" id="s_ac"       value="150000" oninput="recalc()"><span class="sfx">元</span></div></div>
-        <div class="crow"><span class="clabel">護理 / 復健設備</span>
-          <div class="cinput"><input type="number" id="s_nurseq"   value="200000" oninput="recalc()"><span class="sfx">元</span></div></div>
-        <div class="crow"><span class="clabel">廚房設備</span>
-          <div class="cinput"><input type="number" id="s_kitchen"  value="80000"  oninput="recalc()"><span class="sfx">元</span></div></div>
-        <div class="crow"><span class="clabel">電話 / 網路 / 監控</span>
-          <div class="cinput"><input type="number" id="s_it"       value="50000"  oninput="recalc()"><span class="sfx">元</span></div></div>
-        <div class="crow"><span class="clabel">其他設備</span>
-          <div class="cinput"><input type="number" id="s_hw_other" value="50000"  oninput="recalc()"><span class="sfx">元</span></div></div>
-      </div>
-      <!-- Regulatory / professional -->
-      <div>
-        <div class="fs12 fw6 tg" style="margin-bottom:8px">消防 / 法規 / 專業費用</div>
-        <div class="crow"><span class="clabel">消防設備 / 工程</span>
-          <div class="cinput"><input type="number" id="s_fire"     value="150000" oninput="recalc()"><span class="sfx">元</span></div></div>
-        <div class="crow"><span class="clabel">消防申報 / 驗收費</span>
-          <div class="cinput"><input type="number" id="s_fire2"    value="30000"  oninput="recalc()"><span class="sfx">元</span></div></div>
-        <div class="crow"><span class="clabel">建築師費</span>
-          <div class="cinput"><input type="number" id="s_arch"     value="100000" oninput="recalc()"><span class="sfx">元</span></div></div>
-        <div class="crow"><span class="clabel">室內設計費</span>
-          <div class="cinput"><input type="number" id="s_design"   value="50000"  oninput="recalc()"><span class="sfx">元</span></div></div>
-        <div class="crow"><span class="clabel">執照申請 / 規費</span>
-          <div class="cinput"><input type="number" id="s_lic"      value="20000"  oninput="recalc()"><span class="sfx">元</span></div></div>
-        <div class="crow"><span class="clabel">保證金 / 押金</span>
-          <div class="cinput"><input type="number" id="s_dep"      value="100000" oninput="recalc()"><span class="sfx">元</span></div></div>
-        <div class="crow"><span class="clabel">其他前期費用</span>
-          <div class="cinput"><input type="number" id="s_other2"   value="30000"  oninput="recalc()"><span class="sfx">元</span></div></div>
-      </div>
-    </div>
+    <div class="crow"><span class="clabel">裝潢 / 隔間工程</span>
+      <div class="cinput"><input type="number" id="s_reno"  value="500000" oninput="recalc()"><span class="sfx">元</span></div></div>
+    <div class="crow"><span class="clabel">消防設備 / 工程</span>
+      <div class="cinput"><input type="number" id="s_fire"  value="150000" oninput="recalc()"><span class="sfx">元</span></div></div>
+    <div class="crow"><span class="clabel">消防申報 / 驗收費</span>
+      <div class="cinput"><input type="number" id="s_fire2" value="30000"  oninput="recalc()"><span class="sfx">元</span></div></div>
+    <div class="crow"><span class="clabel">建築師費</span>
+      <div class="cinput"><input type="number" id="s_arch"  value="100000" oninput="recalc()"><span class="sfx">元</span></div></div>
+    <div class="crow"><span class="clabel">房租保證金 / 押金</span>
+      <div class="cinput"><input type="number" id="s_dep"   value="100000" oninput="recalc()"><span class="sfx">元</span></div></div>
 
     <!-- Custom setup items -->
     <div style="margin-top:12px">
-      <div class="fs12 fw6 tg" style="margin-bottom:6px">自訂項目</div>
+      <div class="fs12 fw6 tg" style="margin-bottom:6px">自訂項目（單價 × 數量）</div>
+      <div class="setup-hint">
+        💡 常見項目提醒，請依需求自行新增：<br>
+        空調系統・護理/復健設備・廚房設備・電話/網路/監控・床板/床墊・書桌椅・室內設計費・執照申請規費・其他設備
+      </div>
       <div id="setup_custom"></div>
-      <button class="add-item-btn" onclick="addSetupItem()">＋ 新增項目（床墊、書桌、未確認設備…）</button>
+      <button class="add-item-btn" onclick="addSetupItem()">＋ 新增自訂項目</button>
     </div>
 
     <!-- Summary bar -->
@@ -458,7 +449,7 @@ input[type=range]{flex:1;accent-color:var(--blue)}
     <div class="bk">
       <div class="bkr"><span>人力成本</span><span id="b_staff">$0</span></div>
       <div class="bkr"><span>餐費（依入住率）</span><span id="b_food">$0</span></div>
-      <div class="bkr"><span>房租 + 水電 + 設備折舊</span><span id="b_fac">$0</span></div>
+      <div class="bkr"><span>房租 + 水電</span><span id="b_fac">$0</span></div>
       <div class="bkr"><span>耗材 + 保險 + 行政 + 其他</span><span id="b_adm">$0</span></div>
       <div class="bkr" id="b_amort_row" style="display:none">
         <span>前期建置攤提（<span id="b_amort_years">5</span> 年）</span>
@@ -507,6 +498,7 @@ const TYPES = [
 ];
 
 const SAL = {
+  director: { ft:50000, pt:0 },
   manager:  { ft:33000, pt:0 },
   sw:       { ft:40000, pt:10000 },
   nurse:    { ft:45000, pt:10000 },
@@ -533,6 +525,7 @@ function getStaff(beds, t, opts = {}) {
   const offH = (dirQ ? 8 : 0) + (manQ ? 8 : 0);
 
   if (t === 0) {
+    rows.push({ role:'負責人', count:1, ft:true, key:'director' });
     rows.push({ role:'專任管理人員', count:Math.ceil(beds/10), ft:true, key:'manager' });
     if (beds >= 100) {
       const g = Math.floor(beds/100);
@@ -546,14 +539,17 @@ function getStaff(beds, t, opts = {}) {
       rows.push({ role:'護理人員',        count:1, ft:false, key:'nurse', note:'兼任，三類至少選2類各1人' });
       rows.push({ role:'臨床心理師',      count:1, ft:false, key:'psy',   note:'兼任，三類至少選2類各1人' });
     } else {
-      const rH = reqHours(beds, 0), remH = Math.max(0, rH - offH), full = remH === 0 && offH > 0;
-      rows.push({ role:'社會工作人員', count:1, ft:false, key:'sw' });
-      rows.push({ role:'護理/OT師生/臨床心理師', count:full?0:1, ft:false, key:'nurse', offsetted:full,
-        note: full ? `已由具資格人員抵任（抵 ${offH} hr，需 ${rH} hr/週）`
-                   : offH > 0 ? `仍需兼任 ${remH} hr/週（已抵 ${offH}/${rH} hr）`
-                              : '三類至少選1類；每10人需≥4 hr/週' });
+      const rH = reqHours(beds, 0), remH = Math.max(0, rH - offH);
+      const qualCoversProf = offH > 0;
+      rows.push({ role:'社會工作人員', count:1, ft:false, key:'sw',
+        note: qualCoversProf ? `兼任；整體尚需補足 ${remH} hr/週 專業服務時數` : null });
+      rows.push({ role:'護理人員 / 職能治療師（生） / 臨床心理師', count:qualCoversProf?0:1, ft:false, key:'nurse', offsetted:qualCoversProf,
+        note: qualCoversProf
+          ? `已由具資格負責人/管理人員擔任（可抵 ${offH} hr/週；尚需補足 ${remH} hr/週）`
+          : '三類至少選1類；每10人需≥4 hr/週' });
     }
   } else if (t === 1) {
+    rows.push({ role:'負責人', count:1, ft:true, key:'director' });
     rows.push({ role:'專任管理人員', count:Math.ceil(beds/15), ft:true, key:'manager' });
     if (beds >= 100) {
       const g = Math.floor(beds/100);
@@ -567,15 +563,17 @@ function getStaff(beds, t, opts = {}) {
       rows.push({ role:'護理人員',        count:1, ft:false, key:'nurse', note:'兼任，三類至少選2類各1人' });
       rows.push({ role:'臨床心理師',      count:1, ft:false, key:'psy',   note:'兼任，三類至少選2類各1人' });
     } else {
-      const rH = reqHours(beds, 1), remH = Math.max(0, rH - offH), full = remH === 0 && offH > 0;
-      const n = full ? `已由具資格人員抵任（抵 ${offH} hr，需 ${rH} hr/週）`
-                     : offH > 0 ? `仍需兼任 ${remH} hr/週（已抵 ${offH}/${rH} hr）`
-                                : '每15人需≥5 hr/週';
-      rows.push({ role:'職能治療師（生）', count:full?0:1, ft:false, key:'ot',  offsetted:full, note:n });
-      rows.push({ role:'社工/護理/臨床心理師', count:full?0:1, ft:false, key:'sw', offsetted:full,
-        note: full ? '已由具資格人員抵任' : '三類至少選1類' });
+      const rH = reqHours(beds, 1), remH = Math.max(0, rH - offH);
+      const qualCoversProf = offH > 0;
+      const n = qualCoversProf
+        ? `已由具資格負責人/管理人員擔任（可抵 ${offH} hr/週；尚需補足 ${remH} hr/週）`
+        : '每15人需≥5 hr/週';
+      rows.push({ role:'職能治療師（生）', count:qualCoversProf?0:1, ft:false, key:'ot', offsetted:qualCoversProf, note:n });
+      rows.push({ role:'社工 / 護理人員 / 臨床心理師', count:qualCoversProf?0:1, ft:false, key:'sw', offsetted:qualCoversProf,
+        note: qualCoversProf ? '已由具資格負責人/管理人員擔任' : '三類至少選1類' });
     }
   } else {
+    rows.push({ role:'負責人', count:1, ft:true, key:'director' });
     rows.push({ role:'護理人員',   count:Math.ceil(beds/20), ft:true, key:'nurse' });
     rows.push({ role:'照顧服務員', count:Math.ceil(beds/10), ft:true, key:'caregiver' });
     rows.push(beds >= 100
@@ -633,23 +631,29 @@ function renderCostRows(staff) {
   let html = `<div class="cgrid">
     <div class="cg-hd">職種</div>
     <div class="cg-hd c">人數</div>
-    <div class="cg-hd c">月薪（元）</div>
-    <div class="cg-hd r">小計</div>`;
+    <div class="cg-hd c">薪資設定</div>
+    <div class="cg-hd r">月小計</div>`;
   staff.forEach((s, i) => {
-    const sal  = s.ft ? SAL[s.key].ft : SAL[s.key].pt;
     const fade = s.offsetted ? 'opacity:.4;' : '';
+    const dis  = s.offsetted ? 'disabled' : '';
     const bc   = s.offsetted?'bo':(s.ft?'bf':'bp');
     const bt   = s.offsetted?'已抵任':(s.ft?'專任':'兼任');
+    const salCell = s.ft
+      ? `<input type="number" id="sal_${i}" value="${SAL[s.key].ft}" min="0" oninput="recalc()" ${dis} style="text-align:right">`
+      : `<div style="display:flex;align-items:center;gap:3px;font-size:11px;width:100%">
+           <input type="number" id="hr_${i}"  value="190" min="0" oninput="recalc()" ${dis} style="width:52px;text-align:right;padding:0 4px">
+           <span style="color:var(--gray-500);white-space:nowrap">元×</span>
+           <input type="number" id="hrs_${i}" value="8"   min="0" oninput="recalc()" ${dis} style="width:36px;text-align:center;padding:0 3px">
+           <span style="color:var(--gray-500);white-space:nowrap">時/週</span>
+         </div>`;
     html += `
     <div class="cg-td" style="${fade}">
       <div><div class="fw6 fs12">${s.role}</div><span class="badge ${bc}" style="margin-top:3px">${bt}</span></div>
     </div>
     <div class="cg-td c" style="${fade}">
-      <input type="number" id="cnt_${i}" value="${s.count}" min="0" oninput="recalc()" ${s.offsetted?'disabled':''}>
+      <input type="number" id="cnt_${i}" value="${s.count}" min="0" oninput="recalc()" ${dis}>
     </div>
-    <div class="cg-td" style="${fade}">
-      <input type="number" id="sal_${i}" value="${sal}" min="0" oninput="recalc()" ${s.offsetted?'disabled':''} style="text-align:right">
-    </div>
+    <div class="cg-td" style="${fade}">${salCell}</div>
     <div class="cg-td r fw6 fs12" id="sub_${i}" style="${fade}color:${s.offsetted?'var(--gray-400)':'var(--blue)'}">
       ${s.offsetted?'—':'$0'}
     </div>`;
@@ -669,8 +673,15 @@ function recalc() {
     const el = document.getElementById('sub_'+i);
     if (s.offsetted) { if (el) el.textContent = '—'; return; }
     const cnt = parseInt(document.getElementById('cnt_'+i)?.value)||0;
-    const sal = parseInt(document.getElementById('sal_'+i)?.value)||0;
-    const sub = cnt * sal * burden;
+    let monthlySal;
+    if (s.ft) {
+      monthlySal = parseFloat(document.getElementById('sal_'+i)?.value)||0;
+    } else {
+      const hr  = parseFloat(document.getElementById('hr_'+i)?.value)||0;
+      const hrs = parseFloat(document.getElementById('hrs_'+i)?.value)||0;
+      monthlySal = hr * hrs * 4.33;
+    }
+    const sub = cnt * monthlySal * burden;
     staffTotal += sub;
     if (el) el.textContent = fmt(sub);
   });
@@ -685,20 +696,21 @@ function recalc() {
   const foodPer= parseFloat(document.getElementById('c_food').value)||0;
   const supply = parseFloat(document.getElementById('c_supply').value)||0;
   const ins    = parseFloat(document.getElementById('c_ins').value)||0;
-  const equip  = parseFloat(document.getElementById('c_equip').value)||0;
   const admin  = parseFloat(document.getElementById('c_admin').value)||0;
   const other  = parseFloat(document.getElementById('c_other').value)||0;
 
   const food = foodPer * ocBeds;
-  const fac  = rent + util + equip;
-  const adm  = supply + ins + admin + other;
+  const fac  = rent + util;
+  let adm    = supply + ins + admin + other;
+  document.querySelectorAll('#monthly_custom .cs-amt').forEach(el => { adm += parseFloat(el.value)||0; });
   document.getElementById('otherSub').textContent = fmt(food + fac + adm);
 
   // Setup costs
-  const setupIds = ['s_reno','s_ac','s_nurseq','s_kitchen','s_it','s_hw_other',
-                    's_fire','s_fire2','s_arch','s_design','s_lic','s_dep','s_other2'];
+  const setupIds = ['s_reno','s_fire','s_fire2','s_arch','s_dep'];
   let setupTotal = setupIds.reduce((sum,id) => sum+(parseFloat(document.getElementById(id)?.value)||0), 0);
-  document.querySelectorAll('#setup_custom .cs-amt').forEach(el => { setupTotal += parseFloat(el.value)||0; });
+  document.querySelectorAll('#setup_custom .csr').forEach(row => {
+    setupTotal += (parseFloat(row.querySelector('.cs-price')?.value)||0) * (parseFloat(row.querySelector('.cs-qty')?.value)||0);
+  });
   const amortYears   = Math.max(1, parseInt(document.getElementById('amortYears')?.value)||5);
   const amortMonthly = setupTotal / (amortYears * 12);
   const inclAmort    = document.getElementById('inclAmort')?.checked || false;
@@ -730,7 +742,7 @@ function recalc() {
 }
 
 // ── calc ──────────────────────────────────────
-function calc() {
+function calc(syncBeds = true) {
   const T    = TYPES[typeIdx];
   const area = parseFloat(document.getElementById('area').value)||0;
   const maxB = Math.floor(area / T.areaPerUnit);
@@ -742,8 +754,13 @@ function calc() {
   document.getElementById('extraRules').textContent = T.extra;
 
   const pb = document.getElementById('planBeds');
-  let v = maxB;
-  pb.value = maxB;
+  let v;
+  if (syncBeds) {
+    v = maxB; pb.value = maxB;
+  } else {
+    v = Math.min(Math.max(parseInt(pb.value)||1, 1), maxB);
+    pb.value = v;
+  }
 
   document.getElementById('occD').textContent = document.getElementById('occ').value + '%';
 
@@ -786,28 +803,62 @@ function convFrom(src) {
   if (src === 'm2') {
     const v = parseFloat(document.getElementById('conv_m2').value);
     document.getElementById('conv_ping').value = isNaN(v) ? '' : (v / PING).toFixed(2);
+    document.getElementById('area').value = isNaN(v) ? '' : v;
+    calc();
   } else {
     const v = parseFloat(document.getElementById('conv_ping').value);
-    document.getElementById('conv_m2').value = isNaN(v) ? '' : (v * PING).toFixed(2);
+    const m2 = isNaN(v) ? '' : (v * PING).toFixed(2);
+    document.getElementById('conv_m2').value = m2;
+    document.getElementById('area').value = m2;
+    calc();
   }
 }
 
 // ── Custom setup items ────────────────────────
 let csrCounter = 0;
 
-function addSetupItem(name='', amt=0, silent=false) {
+function csrCalc(el) {
+  const row = el.closest('.csr');
+  const price = parseFloat(row.querySelector('.cs-price')?.value)||0;
+  const qty   = parseFloat(row.querySelector('.cs-qty')?.value)||0;
+  const sub   = row.querySelector('.cs-subtotal');
+  if (sub) sub.textContent = fmt(price * qty);
+  recalc();
+}
+
+function addSetupItem(name='', price=0, qty=1, silent=false) {
   const div = document.createElement('div');
   div.className = 'csr';
   div.innerHTML = `
-    <input type="text" class="cs-name" placeholder="項目名稱（如：床墊、書桌…）" oninput="recalc()">
-    <div class="cinput">
-      <input type="number" class="cs-amt" value="0" min="0" oninput="recalc()">
-      <span class="sfx">元</span>
+    <input type="text" class="cs-name" placeholder="項目名稱..." oninput="recalc()">
+    <div style="display:flex;align-items:center;gap:4px;font-size:12px">
+      <input type="number" class="cs-price" value="0" min="0" style="width:82px;text-align:right;padding:0 4px" oninput="csrCalc(this)">
+      <span style="color:var(--gray-500);white-space:nowrap">元 ×</span>
+      <input type="number" class="cs-qty" value="1" min="0" step="1" style="width:46px;text-align:center;padding:0 3px" oninput="csrCalc(this)">
+      <span class="cs-subtotal">$0</span>
     </div>
     <button class="csr-del" onclick="this.closest('.csr').remove();recalc()" title="刪除">✕</button>`;
   div.querySelector('.cs-name').value = name;
-  div.querySelector('.cs-amt').value = amt;
+  div.querySelector('.cs-price').value = price;
+  div.querySelector('.cs-qty').value   = qty;
+  div.querySelector('.cs-subtotal').textContent = fmt(price * qty);
   document.getElementById('setup_custom').appendChild(div);
+  if (!silent) recalc();
+}
+
+function addMonthlyItem(name='', amt=0, silent=false) {
+  const div = document.createElement('div');
+  div.className = 'csr';
+  div.innerHTML = `
+    <input type="text" class="cs-name" placeholder="項目名稱..." oninput="recalc()">
+    <div class="cinput">
+      <input type="number" class="cs-amt" value="0" min="0" oninput="recalc()">
+      <span class="sfx">元/月</span>
+    </div>
+    <button class="csr-del" onclick="this.closest('.csr').remove();recalc()" title="刪除">✕</button>`;
+  div.querySelector('.cs-name').value = name;
+  div.querySelector('.cs-amt').value  = amt;
+  document.getElementById('monthly_custom').appendChild(div);
   if (!silent) recalc();
 }
 
@@ -829,15 +880,19 @@ function renderProfileSelect() {
 
 function collectState() {
   const get = id => { const el=document.getElementById(id); if(!el)return 0; return el.type==='checkbox'?el.checked:(parseFloat(el.value)||0); };
-  const staffData = currentStaff.map((s,i) => ({
+  const staffData = currentStaff.map((s,i) => s.ft ? ({
     cnt: parseInt(document.getElementById('cnt_'+i)?.value)||s.count,
-    sal: parseInt(document.getElementById('sal_'+i)?.value)||(s.ft?SAL[s.key].ft:SAL[s.key].pt),
+    sal: parseInt(document.getElementById('sal_'+i)?.value)||SAL[s.key].ft,
+  }) : ({
+    cnt: parseInt(document.getElementById('cnt_'+i)?.value)||s.count,
+    hr:  parseFloat(document.getElementById('hr_'+i)?.value)||190,
+    hrs: parseFloat(document.getElementById('hrs_'+i)?.value)||8,
   }));
   return {
     typeIdx, area:get('area'), planBeds:get('planBeds'), occ:get('occ'),
     dirQ:get('dirQ'), manQ:get('manQ'), burden:get('burden'),
     c_rent:get('c_rent'), c_util:get('c_util'), c_food:get('c_food'),
-    c_supply:get('c_supply'), c_ins:get('c_ins'), c_equip:get('c_equip'),
+    c_supply:get('c_supply'), c_ins:get('c_ins'),
     c_admin:get('c_admin'), c_other:get('c_other'),
     s_reno:get('s_reno'), s_ac:get('s_ac'), s_nurseq:get('s_nurseq'),
     s_kitchen:get('s_kitchen'), s_it:get('s_it'), s_hw_other:get('s_hw_other'),
@@ -846,6 +901,11 @@ function collectState() {
     amortYears:get('amortYears'), inclAmort:get('inclAmort'),
     staffData,
     customSetup: [...document.querySelectorAll('#setup_custom .csr')].map(row => ({
+      name:  row.querySelector('.cs-name').value,
+      price: parseFloat(row.querySelector('.cs-price').value)||0,
+      qty:   parseFloat(row.querySelector('.cs-qty').value)||1,
+    })),
+    customMonthly: [...document.querySelectorAll('#monthly_custom .csr')].map(row => ({
       name:   row.querySelector('.cs-name').value,
       amount: parseFloat(row.querySelector('.cs-amt').value)||0,
     })),
@@ -859,7 +919,7 @@ function applyState(state) {
   set('area',state.area||0); set('planBeds',state.planBeds||1); set('occ',state.occ||85);
   set('dirQ',state.dirQ||false); set('manQ',state.manQ||false); set('burden',state.burden||18);
   set('c_rent',state.c_rent||0); set('c_util',state.c_util||0); set('c_food',state.c_food||0);
-  set('c_supply',state.c_supply||0); set('c_ins',state.c_ins||0); set('c_equip',state.c_equip||0);
+  set('c_supply',state.c_supply||0); set('c_ins',state.c_ins||0);
   set('c_admin',state.c_admin||0); set('c_other',state.c_other||0);
   set('s_reno',state.s_reno||0); set('s_ac',state.s_ac||0); set('s_nurseq',state.s_nurseq||0);
   set('s_kitchen',state.s_kitchen||0); set('s_it',state.s_it||0); set('s_hw_other',state.s_hw_other||0);
@@ -867,14 +927,23 @@ function applyState(state) {
   set('s_design',state.s_design||0); set('s_lic',state.s_lic||0); set('s_dep',state.s_dep||0);
   set('s_other2',state.s_other2||0); set('amortYears',state.amortYears||5); set('inclAmort',state.inclAmort||false);
   document.getElementById('setup_custom').innerHTML='';
+  document.getElementById('monthly_custom').innerHTML='';
   csrCounter=0;
-  (state.customSetup||[]).forEach(item=>addSetupItem(item.name,item.amount,true));
+  (state.customSetup||[]).forEach(item=>addSetupItem(item.name,item.price||0,item.qty||1,true));
+  (state.customMonthly||[]).forEach(item=>addMonthlyItem(item.name,item.amount,true));
   calc();
   if (state.staffData) {
     state.staffData.forEach((sd,i) => {
-      const ce=document.getElementById('cnt_'+i), se=document.getElementById('sal_'+i);
+      const ce=document.getElementById('cnt_'+i);
       if(ce&&!ce.disabled)ce.value=sd.cnt;
-      if(se&&!se.disabled)se.value=sd.sal;
+      if (sd.sal !== undefined) {
+        const se=document.getElementById('sal_'+i);
+        if(se&&!se.disabled)se.value=sd.sal;
+      } else {
+        const hre=document.getElementById('hr_'+i), hrse=document.getElementById('hrs_'+i);
+        if(hre&&!hre.disabled)hre.value=sd.hr||190;
+        if(hrse&&!hrse.disabled)hrse.value=sd.hrs||8;
+      }
     });
   }
   recalc();
@@ -891,14 +960,22 @@ function computeSummary(state) {
     if (s.offsetted) return;
     const sd = state.staffData && state.staffData[i];
     const cnt = sd ? (sd.cnt||s.count) : s.count;
-    const sal = sd ? (sd.sal||(s.ft?SAL[s.key].ft:SAL[s.key].pt)) : (s.ft?SAL[s.key].ft:SAL[s.key].pt);
-    staffTotal += cnt * sal * burden;
+    let monthlySal;
+    if (s.ft) {
+      monthlySal = sd?.sal ?? SAL[s.key].ft;
+    } else {
+      const hr  = sd?.hr  ?? 190;
+      const hrs = sd?.hrs ?? 8;
+      monthlySal = hr * hrs * 4.33;
+    }
+    staffTotal += cnt * monthlySal * burden;
   });
   const food = (state.c_food||0)*ocBeds;
-  const fac  = (state.c_rent||0)+(state.c_util||0)+(state.c_equip||0);
-  const adm  = (state.c_supply||0)+(state.c_ins||0)+(state.c_admin||0)+(state.c_other||0);
-  const setupIds = ['s_reno','s_ac','s_nurseq','s_kitchen','s_it','s_hw_other','s_fire','s_fire2','s_arch','s_design','s_lic','s_dep','s_other2'];
-  const customTotal  = (state.customSetup||[]).reduce((sum,item)=>sum+(item.amount||0),0);
+  const fac  = (state.c_rent||0)+(state.c_util||0);
+  const customMonthlyTotal = (state.customMonthly||[]).reduce((sum,item)=>sum+(item.amount||0),0);
+  const adm  = (state.c_supply||0)+(state.c_ins||0)+(state.c_admin||0)+(state.c_other||0)+customMonthlyTotal;
+  const setupIds = ['s_reno','s_fire','s_fire2','s_arch','s_dep'];
+  const customTotal  = (state.customSetup||[]).reduce((sum,item)=>sum+(item.price||0)*(item.qty||1),0);
   const setupTotal   = setupIds.reduce((sum,k)=>sum+(state[k]||0),0) + customTotal;
   const amortMonthly = setupTotal/Math.max(1,(state.amortYears||5))/12;
   const amort = state.inclAmort ? amortMonthly : 0;
