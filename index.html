@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>精神醫療機構經營成本計算器</title>
+<style>
+:root {
+  --blue:#2563eb; --blue-light:#dbeafe; --blue-dark:#1e3a8a;
+  --purple:#7c3aed; --green:#16a34a; --amber:#d97706; --red:#dc2626;
+  --teal:#0f766e;
+  --gray-50:#f9fafb; --gray-100:#f3f4f6; --gray-200:#e5e7eb;
+  --gray-300:#d1d5db; --gray-400:#9ca3af; --gray-500:#6b7280;
+  --gray-600:#4b5563; --gray-700:#374151; --gray-800:#1f2937;
+  --shadow:0 1px 3px rgba(0,0,0,.1); --r:8px;
+  --input-h:32px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--gray-100);color:var(--gray-800);font-size:14px}
+
+/* ── Header ── */
+.hd{background:linear-gradient(135deg,var(--blue-dark),var(--blue));color:#fff;padding:20px 24px}
+.hd h1{font-size:22px;font-weight:700}
+.hd p{font-size:12px;opacity:.8;margin-top:4px}
+.wrap{max-width:1200px;margin:0 auto;padding:16px}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:8px;margin-bottom:16px;background:#fff;padding:8px;border-radius:var(--r);box-shadow:var(--shadow)}
+.tab{flex:1;padding:11px 8px;border:2px solid var(--gray-200);background:var(--gray-50);border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--gray-600);transition:.15s;text-align:center;line-height:1.5;user-select:none}
+.tab:hover{border-color:var(--blue);color:var(--blue)}
+.tab.on{border-color:var(--blue);background:var(--blue-light);color:var(--blue);font-weight:700}
+
+/* ── Layout ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:780px){.g2{grid-template-columns:1fr}}
+
+/* ── Card ── */
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+.ch{padding:11px 16px;font-size:13px;font-weight:700;color:#fff}
+.ch.b{background:var(--blue)} .ch.p{background:var(--purple)}
+.ch.g{background:var(--green)} .ch.s{background:var(--gray-700)}
+.ch.t{background:var(--teal)} .ch.gd{background:linear-gradient(135deg,var(--blue-dark),var(--blue))}
+.cb{padding:16px}
+
+/* ── Form basics ── */
+.fg{margin-bottom:12px}
+label.lbl{display:block;font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:4px}
+/* unified input style */
+input[type=number],select{
+  height:var(--input-h);padding:0 10px;border:1px solid var(--gray-300);
+  border-radius:6px;font-size:13px;color:var(--gray-800);background:#fff;
+  transition:border-color .15s;width:100%;
+}
+input[type=number]:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+input[type=number]:disabled{background:var(--gray-50);color:var(--gray-400);cursor:not-allowed}
+.ig{display:flex;align-items:center;gap:8px}
+.sfx{font-size:12px;color:var(--gray-500);white-space:nowrap}
+
+/* ── Result box ── */
+.rbox{background:var(--blue-light);border:1px solid #bfdbfe;border-radius:6px;padding:12px 16px;margin-bottom:12px}
+.rbox .rl{color:var(--blue);font-size:11px;font-weight:600;margin-bottom:2px}
+.rval{font-size:30px;font-weight:800;color:var(--blue)}
+.runit{font-size:13px;color:var(--gray-600)}
+.rsub{font-size:11px;color:var(--gray-500);margin-top:4px}
+
+/* ── Staff requirement table ── */
+.st{width:100%;border-collapse:collapse;font-size:12px}
+.st th{background:var(--gray-100);padding:7px 10px;text-align:left;font-weight:600;color:var(--gray-700);border-bottom:1px solid var(--gray-200)}
+.st td{padding:7px 10px;border-bottom:1px solid var(--gray-100);vertical-align:middle}
+.st tr:last-child td{border-bottom:none}
+.st tfoot td{background:var(--gray-50);font-weight:700;border-top:1px solid var(--gray-300)}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.bf{background:#dcfce7;color:#166534}
+.bp{background:#fef3c7;color:#92400e}
+.bo{background:#e0e7ff;color:#3730a3}
+
+/* ── Staff cost grid (table-like, 4-col) ── */
+.cgrid{display:grid;grid-template-columns:1fr 62px 130px 76px;align-items:stretch}
+.cg-hd{
+  padding:6px 8px;background:var(--gray-100);font-size:11px;font-weight:600;
+  color:var(--gray-600);border-bottom:2px solid var(--gray-200);
+}
+.cg-hd.c{text-align:center} .cg-hd.r{text-align:right}
+.cg-td{
+  padding:8px 8px;border-bottom:1px solid var(--gray-100);
+  display:flex;align-items:center;
+}
+.cg-td.c{justify-content:center} .cg-td.r{justify-content:flex-end}
+/* full-width number input inside grid cell */
+.cg-td input[type=number]{width:100%;text-align:center;padding:0 4px}
+.cg-td.r input[type=number]{text-align:right;padding:0 6px}
+
+/* ── Cost rows (label + input, fixed columns) ── */
+.crow{display:grid;grid-template-columns:1fr 140px;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--gray-100)}
+.crow:last-child{border-bottom:none}
+.clabel{font-size:13px;color:var(--gray-700)}
+.cinput{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.cinput input[type=number]{width:96px;text-align:right}
+
+/* ── Setup cost summary bar ── */
+.setup-bar{display:grid;grid-template-columns:160px 160px 160px 1fr;gap:0;align-items:center;margin-top:4px}
+.setup-bar-item{padding:12px 16px;border-right:1px solid var(--gray-200)}
+.setup-bar-item:last-child{border-right:none;display:flex;align-items:center;justify-content:flex-end}
+.setup-bar .sl{font-size:11px;color:var(--gray-500);margin-bottom:2px}
+.setup-bar .sv{font-size:22px;font-weight:800}
+.setup-bar .sv.teal{color:var(--teal)}
+.setup-bar .sv.amb{color:var(--amber)}
+.setup-bar .amort-ctrl{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gray-600)}
+.setup-bar .amort-ctrl input[type=number]{width:60px;text-align:center}
+@media(max-width:700px){
+  .setup-bar{grid-template-columns:1fr 1fr;row-gap:1px}
+  .setup-bar-item{border-right:none;border-bottom:1px solid var(--gray-200)}
+  .setup-bar-item:last-child{border-bottom:none;justify-content:flex-start}
+}
+
+/* ── Summary ── */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:600px){.sg{grid-template-columns:repeat(2,1fr)}}
+.sc{background:var(--gray-50);border-radius:6px;padding:14px;text-align:center}
+.sc .sl{font-size:11px;color:var(--gray-500);margin-bottom:4px}
+.sc .sv{font-size:20px;font-weight:800}
+.sc .ss{font-size:11px;color:var(--gray-500);margin-top:2px}
+.sv.b{color:var(--blue)} .sv.a{color:var(--amber)} .sv.r{color:var(--red)} .sv.g{color:var(--green)}
+.bk{background:var(--gray-50);border-radius:6px;padding:12px}
+.bkr{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+.bkr.tot{border-top:1px solid var(--gray-300);margin-top:8px;padding-top:8px;font-weight:700;font-size:14px}
+
+/* ── Notes ── */
+.note{background:#fef3c7;border-left:3px solid var(--amber);padding:8px 12px;font-size:11px;color:var(--gray-700);border-radius:0 4px 4px 0;margin-top:8px;line-height:1.6}
+.info{background:#eff6ff;border-left:3px solid var(--blue);padding:8px 12px;font-size:11px;color:var(--gray-700);border-radius:0 4px 4px 0;margin-top:8px;line-height:1.6}
+
+/* ── Slider ── */
+.slw{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--blue)}
+.slv{font-size:16px;font-weight:700;color:var(--blue);min-width:42px;text-align:right}
+
+/* ── Qualification panel ── */
+.cbox{display:flex;align-items:flex-start;gap:8px;padding:5px 0;cursor:pointer;font-size:12px;color:var(--gray-700)}
+.cbox input[type=checkbox]{margin-top:1px;accent-color:var(--purple);width:15px;height:15px;cursor:pointer;flex-shrink:0}
+.hbox{background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:12px;line-height:1.8}
+.hbox.warn{background:#fef9c3;border-color:#fcd34d}
+.hbox .hr{display:flex;justify-content:space-between;gap:8px;padding:1px 0}
+.hbox .ok{color:var(--green);font-weight:700}
+.hbox .ng{color:var(--amber);font-weight:700}
+.qual-title{font-size:12px;font-weight:700;color:var(--purple);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+
+/* ── Utilities ── */
+.dv{height:1px;background:var(--gray-200);margin:12px 0}
+.fw7{font-weight:700} .fw6{font-weight:600}
+.fs11{font-size:11px} .fs12{font-size:12px}
+.tg{color:var(--gray-500)} .mt8{margin-top:8px}
+.footer{text-align:center;padding:20px;font-size:11px;color:var(--gray-500);line-height:1.8}
+
+/* ── Conversion bar ── */
+.conv-bar{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.conv-title{font-size:12px;font-weight:700;color:var(--gray-500);white-space:nowrap}
+.conv-group{display:flex;align-items:center;gap:6px}
+.conv-group input[type=number]{width:110px;height:var(--input-h);text-align:right}
+.conv-unit{font-size:13px;font-weight:700;color:var(--gray-700);white-space:nowrap}
+.conv-eq{font-size:16px;color:var(--gray-400);font-weight:300;padding:0 2px}
+.conv-hint{font-size:11px;color:var(--gray-400);margin-left:4px;white-space:nowrap}
+
+/* ── Profile bar ── */
+.profile-bar{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pb-select{flex:0 0 auto;width:200px}
+.pb-name{flex:1;min-width:130px;max-width:220px;height:var(--input-h);padding:0 10px;border:1px solid var(--gray-300);border-radius:6px;font-size:13px;color:var(--gray-800)}
+.pb-name:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.pb-btns{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.pbtn{height:var(--input-h);padding:0 12px;border:1px solid var(--gray-300);background:#fff;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.pbtn:hover{background:var(--gray-50)}
+.pbtn.prim{background:var(--blue);color:#fff;border-color:var(--blue)}
+.pbtn.prim:hover{background:#1d4ed8}
+.pbtn.acc{background:var(--purple);color:#fff;border-color:var(--purple)}
+.pbtn.acc:hover{background:#6d28d9}
+.pbtn.danger{color:var(--red)}
+.pbtn.danger:hover{background:#fef2f2}
+
+/* ── Modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-bg.open{display:flex}
+.modal-box{background:#fff;border-radius:var(--r);width:100%;max-width:960px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-hd{padding:14px 18px;font-weight:700;font-size:15px;border-bottom:1px solid var(--gray-200);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.modal-body{overflow-y:auto;padding:16px}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-500);line-height:1;padding:0 4px}
+.modal-close:hover{color:var(--red)}
+.cmp-sel-bar{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.cmp-sel{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--gray-600)}
+.cmp-sel select{height:var(--input-h)}
+
+/* ── Compare table ── */
+.ctbl{width:100%;border-collapse:collapse;font-size:13px}
+.ctbl td,.ctbl th{padding:8px 10px;border-bottom:1px solid var(--gray-100);vertical-align:middle}
+.ctbl th{background:var(--gray-50);font-weight:700;font-size:12px;color:var(--gray-600);text-align:center}
+.ctbl th:first-child{text-align:left}
+.ctbl .shd td{background:var(--gray-100);font-weight:700;font-size:11px;color:var(--gray-600);text-transform:uppercase;letter-spacing:.5px}
+.ctbl .tot td{background:#eff6ff;font-weight:700;font-size:14px}
+.dlo{color:var(--green);font-weight:700} .dhi{color:var(--red);font-weight:700} .dz{color:var(--gray-400)}
+.cmp-num{text-align:right;font-variant-numeric:tabular-nums}
+.cmp-tag{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700;margin-left:5px}
+.cmp-tag.win{background:#dcfce7;color:#166534}
+.cmp-tag.los{background:#fee2e2;color:#991b1b}
+.cmp-tag.tie{background:var(--gray-100);color:var(--gray-600)}
+
+/* ── Optimization hints ── */
+.opt-box{background:#f0fdf4;border:1px solid #86efac;border-radius:var(--r);padding:14px;margin-top:16px}
+.opt-title{font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px}
+.opt-item{font-size:12px;color:var(--gray-700);padding:3px 0;display:flex;gap:6px;line-height:1.6}
+.opt-item::before{content:"→";color:var(--green);flex-shrink:0;font-weight:700}
+
+/* ── Custom setup rows ── */
+.csr{display:grid;grid-template-columns:1fr 150px 28px;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--gray-100)}
+.csr input[type=text]{height:var(--input-h);padding:0 10px;border:1px solid var(--gray-300);border-radius:6px;font-size:13px;color:var(--gray-800);width:100%;background:#fff}
+.csr input[type=text]:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.csr-del{height:var(--input-h);width:28px;border:1px solid var(--gray-200);background:none;border-radius:6px;cursor:pointer;color:var(--gray-400);font-size:14px;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.csr-del:hover{background:#fef2f2;color:var(--red);border-color:var(--red)}
+.add-item-btn{margin-top:10px;width:100%;height:var(--input-h);border:1px dashed var(--gray-300);background:none;border-radius:6px;font-size:12px;font-weight:600;color:var(--gray-500);cursor:pointer}
+.add-item-btn:hover{border-color:var(--teal);color:var(--teal);background:#f0fdfa}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--gray-800);color:#fff;padding:10px 20px;border-radius:20px;opacity:0;transition:transform .3s,opacity .3s;z-index:9999;font-size:13px;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+<div class="hd">
+  <h1>精神醫療機構經營成本計算器</h1>
+  <p>依設置基準法規 · 自動計算最低法定人員 · 快速試算月度 / 年度經營成本</p>
+</div>
+<div class="wrap">
+
+<!-- Conversion bar -->
+<div class="conv-bar">
+  <span class="conv-title">面積換算</span>
+  <div class="conv-group">
+    <input type="number" id="conv_m2" placeholder="0" min="0" step="0.01" oninput="convFrom('m2')">
+    <span class="conv-unit">m²</span>
+  </div>
+  <span class="conv-eq">=</span>
+  <div class="conv-group">
+    <input type="number" id="conv_ping" placeholder="0" min="0" step="0.01" oninput="convFrom('ping')">
+    <span class="conv-unit">坪</span>
+  </div>
+  <span class="conv-hint">1 坪 = 3.3058 m²</span>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab on" id="tab0" onclick="setType(0)">住宿型<br>精神復健機構</div>
+  <div class="tab"    id="tab1" onclick="setType(1)">日間型<br>精神復健機構</div>
+  <div class="tab"    id="tab2" onclick="setType(2)">精神護理之家</div>
+</div>
+
+<!-- Profile bar -->
+<div class="profile-bar">
+  <select id="pb_select" class="pb-select" onchange="loadSelectedProfile()">
+    <option value="">— 未載入設定檔 —</option>
+  </select>
+  <input type="text" id="pb_name" class="pb-name" placeholder="設定檔名稱..." maxlength="40">
+  <div class="pb-btns">
+    <button class="pbtn prim" onclick="saveProfile()">儲存</button>
+    <button class="pbtn" onclick="saveAsProfile()">另存新檔</button>
+    <button class="pbtn acc" onclick="openCompare()">⚖ 比較</button>
+    <button class="pbtn" onclick="exportProfiles()" title="匯出所有設定檔為 JSON 檔">匯出</button>
+    <button class="pbtn" onclick="document.getElementById('pb_import').click()" title="從 JSON 檔匯入設定檔">匯入</button>
+    <button class="pbtn danger" onclick="deleteSelectedProfile()">刪除</button>
+  </div>
+</div>
+<input type="file" id="pb_import" accept=".json" style="display:none" onchange="importProfiles(event)">
+
+<div class="g2">
+<!-- LEFT col -->
+<div>
+  <!-- Building info -->
+  <div class="card">
+    <div class="ch b">建築物資訊</div>
+    <div class="cb">
+      <div class="fg">
+        <label class="lbl">總樓地板面積（m²）<span class="tg fs11"> — 不含車庫、宿舍、陽台</span></label>
+        <div class="ig">
+          <input type="number" id="area" value="300" min="0" step="10" oninput="calc()">
+          <span class="sfx">m²</span>
+        </div>
+      </div>
+      <div class="rbox">
+        <div class="rl">法定最大床數 / 服務量</div>
+        <div><span class="rval" id="maxBeds">30</span> <span class="runit" id="unitLabel">床</span></div>
+        <div class="rsub" id="areaRule"></div>
+      </div>
+      <div class="fg">
+        <label class="lbl">實際規劃床數 / 服務量<span class="tg fs11"> （不超過法定上限）</span></label>
+        <div class="ig">
+          <input type="number" id="planBeds" value="30" min="1" oninput="calc()">
+          <span class="sfx" id="unitLabel2">床</span>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="lbl">入住率 / 服務率</label>
+        <div class="slw">
+          <input type="range" id="occ" min="50" max="100" value="85" oninput="calc()">
+          <div class="slv" id="occD">85%</div>
+        </div>
+      </div>
+      <div class="info" id="extraRules"></div>
+    </div>
+  </div>
+
+  <!-- Staff requirement -->
+  <div class="card">
+    <div class="ch p">法定最低人員配置</div>
+    <div class="cb">
+      <div id="staffReqTable"></div>
+      <!-- Qualification offset: 住宿型/日間型 ≤49 only -->
+      <div id="qualPanel" style="display:none">
+        <div class="dv"></div>
+        <div class="qual-title">⚖️ 負責人／管理人員資格抵任（服務量 ≤ 49 適用）</div>
+        <label class="cbox"><input type="checkbox" id="dirQ" onchange="calc()"> 負責人具專業人員資格（可抵任 8 hr/週）</label>
+        <label class="cbox"><input type="checkbox" id="manQ" onchange="calc()"> 專任管理人員具專業人員資格（可抵任 8 hr/週）</label>
+        <div id="hoursBox"></div>
+      </div>
+      <div class="note" id="staffNote"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT col -->
+<div>
+  <!-- Staff cost -->
+  <div class="card">
+    <div class="ch g">人力成本設定</div>
+    <div class="cb">
+      <!-- burden row — reuses crow style -->
+      <div class="crow" style="margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid var(--gray-200)">
+        <span class="clabel fw6">勞健保 / 勞退加成</span>
+        <div class="cinput">
+          <input type="number" id="burden" value="18" min="0" max="50" oninput="recalc()" style="width:60px">
+          <span class="sfx">%</span>
+        </div>
+      </div>
+      <div id="staffCostRows"></div>
+      <div class="dv"></div>
+      <div class="bkr tot"><span>人力成本小計（月）</span><span id="staffSub">$0</span></div>
+    </div>
+  </div>
+
+  <!-- Other monthly costs -->
+  <div class="card">
+    <div class="ch s">其他月度成本</div>
+    <div class="cb">
+      <div class="crow"><span class="clabel">租金 / 房屋攤提</span>
+        <div class="cinput"><input type="number" id="c_rent"   value="50000" oninput="recalc()"><span class="sfx">元/月</span></div></div>
+      <div class="crow"><span class="clabel">水電費</span>
+        <div class="cinput"><input type="number" id="c_util"   value="15000" oninput="recalc()"><span class="sfx">元/月</span></div></div>
+      <div class="crow"><span class="clabel">餐費（每床/人）</span>
+        <div class="cinput"><input type="number" id="c_food"   value="6000"  oninput="recalc()"><span class="sfx">元/月</span></div></div>
+      <div class="crow"><span class="clabel">耗材 / 醫材</span>
+        <div class="cinput"><input type="number" id="c_supply" value="10000" oninput="recalc()"><span class="sfx">元/月</span></div></div>
+      <div class="crow"><span class="clabel">保險費</span>
+        <div class="cinput"><input type="number" id="c_ins"    value="5000"  oninput="recalc()"><span class="sfx">元/月</span></div></div>
+      <div class="crow"><span class="clabel">設備折舊 / 維護</span>
+        <div class="cinput"><input type="number" id="c_equip"  value="8000"  oninput="recalc()"><span class="sfx">元/月</span></div></div>
+      <div class="crow"><span class="clabel">行政費用</span>
+        <div class="cinput"><input type="number" id="c_admin"  value="5000"  oninput="recalc()"><span class="sfx">元/月</span></div></div>
+      <div class="crow"><span class="clabel">其他</span>
+        <div class="cinput"><input type="number" id="c_other"  value="5000"  oninput="recalc()"><span class="sfx">元/月</span></div></div>
+      <div class="dv"></div>
+      <div class="bkr tot"><span>其他成本小計（月）</span><span id="otherSub">$0</span></div>
+    </div>
+  </div>
+</div>
+</div><!-- end g2 -->
+
+<!-- Setup / initial costs -->
+<div class="card">
+  <div class="ch t">前期建置成本（一次性費用）</div>
+  <div class="cb">
+    <div class="g2" style="margin-bottom:0">
+      <!-- Hardware / renovation -->
+      <div>
+        <div class="fs12 fw6 tg" style="margin-bottom:8px">硬體 / 裝修</div>
+        <div class="crow"><span class="clabel">裝潢 / 隔間工程</span>
+          <div class="cinput"><input type="number" id="s_reno"     value="500000" oninput="recalc()"><span class="sfx">元</span></div></div>
+        <div class="crow"><span class="clabel">空調系統</span>
+          <div class="cinput"><input type="number" id="s_ac"       value="150000" oninput="recalc()"><span class="sfx">元</span></div></div>
+        <div class="crow"><span class="clabel">護理 / 復健設備</span>
+          <div class="cinput"><input type="number" id="s_nurseq"   value="200000" oninput="recalc()"><span class="sfx">元</span></div></div>
+        <div class="crow"><span class="clabel">廚房設備</span>
+          <div class="cinput"><input type="number" id="s_kitchen"  value="80000"  oninput="recalc()"><span class="sfx">元</span></div></div>
+        <div class="crow"><span class="clabel">電話 / 網路 / 監控</span>
+          <div class="cinput"><input type="number" id="s_it"       value="50000"  oninput="recalc()"><span class="sfx">元</span></div></div>
+        <div class="crow"><span class="clabel">其他設備</span>
+          <div class="cinput"><input type="number" id="s_hw_other" value="50000"  oninput="recalc()"><span class="sfx">元</span></div></div>
+      </div>
+      <!-- Regulatory / professional -->
+      <div>
+        <div class="fs12 fw6 tg" style="margin-bottom:8px">消防 / 法規 / 專業費用</div>
+        <div class="crow"><span class="clabel">消防設備 / 工程</span>
+          <div class="cinput"><input type="number" id="s_fire"     value="150000" oninput="recalc()"><span class="sfx">元</span></div></div>
+        <div class="crow"><span class="clabel">消防申報 / 驗收費</span>
+          <div class="cinput"><input type="number" id="s_fire2"    value="30000"  oninput="recalc()"><span class="sfx">元</span></div></div>
+        <div class="crow"><span class="clabel">建築師費</span>
+          <div class="cinput"><input type="number" id="s_arch"     value="100000" oninput="recalc()"><span class="sfx">元</span></div></div>
+        <div class="crow"><span class="clabel">室內設計費</span>
+          <div class="cinput"><input type="number" id="s_design"   value="50000"  oninput="recalc()"><span class="sfx">元</span></div></div>
+        <div class="crow"><span class="clabel">執照申請 / 規費</span>
+          <div class="cinput"><input type="number" id="s_lic"      value="20000"  oninput="recalc()"><span class="sfx">元</span></div></div>
+        <div class="crow"><span class="clabel">保證金 / 押金</span>
+          <div class="cinput"><input type="number" id="s_dep"      value="100000" oninput="recalc()"><span class="sfx">元</span></div></div>
+        <div class="crow"><span class="clabel">其他前期費用</span>
+          <div class="cinput"><input type="number" id="s_other2"   value="30000"  oninput="recalc()"><span class="sfx">元</span></div></div>
+      </div>
+    </div>
+
+    <!-- Custom setup items -->
+    <div style="margin-top:12px">
+      <div class="fs12 fw6 tg" style="margin-bottom:6px">自訂項目</div>
+      <div id="setup_custom"></div>
+      <button class="add-item-btn" onclick="addSetupItem()">＋ 新增項目（床墊、書桌、未確認設備…）</button>
+    </div>
+
+    <!-- Summary bar -->
+    <div class="dv"></div>
+    <div class="setup-bar">
+      <div class="setup-bar-item">
+        <div class="sl">前期建置總計</div>
+        <div class="sv teal" id="setupTotal">$0</div>
+      </div>
+      <div class="setup-bar-item">
+        <div class="sl">月均攤提金額</div>
+        <div class="sv amb" id="amortMonthly">$0</div>
+      </div>
+      <div class="setup-bar-item">
+        <div class="amort-ctrl">
+          <span>攤提</span>
+          <input type="number" id="amortYears" value="5" min="1" max="30" oninput="recalc()">
+          <span>年</span>
+        </div>
+      </div>
+      <div class="setup-bar-item">
+        <label class="cbox" style="font-size:13px;font-weight:600;gap:10px">
+          <input type="checkbox" id="inclAmort" onchange="recalc()">
+          納入月成本計算（按攤提年數）
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="card">
+  <div class="ch gd">經營成本總覽</div>
+  <div class="cb">
+    <div class="sg">
+      <div class="sc"><div class="sl">月總成本</div><div class="sv b" id="sm_month">$0</div><div class="ss">元/月</div></div>
+      <div class="sc"><div class="sl">年總成本</div><div class="sv b" id="sm_year">$0</div><div class="ss">元/年</div></div>
+      <div class="sc"><div class="sl">每床月成本</div><div class="sv a" id="sm_perbed">$0</div><div class="ss">元/床/月</div></div>
+      <div class="sc"><div class="sl">損益平衡收費</div><div class="sv r" id="sm_be">$0</div><div class="ss" id="sm_be_note">元/床/月</div></div>
+    </div>
+    <div class="bk">
+      <div class="bkr"><span>人力成本</span><span id="b_staff">$0</span></div>
+      <div class="bkr"><span>餐費（依入住率）</span><span id="b_food">$0</span></div>
+      <div class="bkr"><span>房租 + 水電 + 設備折舊</span><span id="b_fac">$0</span></div>
+      <div class="bkr"><span>耗材 + 保險 + 行政 + 其他</span><span id="b_adm">$0</span></div>
+      <div class="bkr" id="b_amort_row" style="display:none">
+        <span>前期建置攤提（<span id="b_amort_years">5</span> 年）</span>
+        <span id="b_amort">$0</span>
+      </div>
+      <div class="bkr tot"><span>月度合計</span><span id="b_total">$0</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  本計算器依據《住宿型精神復健機構設置基準》、《日間型精神復健機構設置基準》及《護理機構分類設置標準》製作<br>
+  僅供試算參考，實際設置請依主管機關最新公告辦理 · Ren Studio
+</div>
+</div><!-- wrap -->
+
+<!-- Compare modal -->
+<div class="modal-bg" id="cmpModal" onclick="if(event.target===this)closeCompare()">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <span>⚖ 設定檔比較 · 成本效益分析</span>
+      <button class="modal-close" onclick="closeCompare()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="cmp-sel-bar">
+        <div class="cmp-sel"><span>方案 A</span><select id="cmp_a" onchange="renderCompare()"></select></div>
+        <div class="cmp-sel"><span>方案 B</span><select id="cmp_b" onchange="renderCompare()"></select></div>
+      </div>
+      <div id="cmpTable"></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const TYPES = [
+  { areaPerUnit:10, unit:'床',
+    areaRule:'住宿型：總樓地板面積每床至少 10 m²（不含員工宿舍、車庫、屋突、陽台）',
+    extra:'每床最小臥室面積（不含浴廁）至少 5 m² · 每一臥室至多 6 床 · 24 小時應有機構內人員上班' },
+  { areaPerUnit:5,  unit:'人',
+    areaRule:'日間型：每服務量 1 人至少 5 m² 總樓地板面積（不含員工宿舍等）',
+    extra:'復健治療空間每人至少 4 m² · 每 20 人應有一間廁所' },
+  { areaPerUnit:20, unit:'床',
+    areaRule:'精神護理之家：每床至少 20 m² 總樓地板面積（不含車庫、宿舍）',
+    extra:'日常活動場所平均每床至少 4.5 m²（不含走廊）· 不得設於地下樓層，最高地面 10 樓 · 任何時段護理人員＋照顧服務員：住民比不得低於 1:20' },
+];
+
+const SAL = {
+  manager:  { ft:33000, pt:0 },
+  sw:       { ft:40000, pt:10000 },
+  nurse:    { ft:45000, pt:10000 },
+  ot:       { ft:48000, pt:12000 },
+  psy:      { ft:55000, pt:15000 },
+  caregiver:{ ft:30000, pt:0 },
+};
+
+let typeIdx = 0;
+let currentStaff = [];
+
+// ── Part-time hours/week requirement ─────────────
+function reqHours(beds, t) {
+  if (t === 0) return Math.ceil(beds / 10) * 4;
+  if (t === 1) return Math.ceil(beds / 15) * 5;
+  return 0;
+}
+
+// ── Staff rules ───────────────────────────────────
+function getStaff(beds, t, opts = {}) {
+  const rows = [];
+  const dirQ = opts.dirQ !== undefined ? opts.dirQ : (document.getElementById('dirQ')?.checked || false);
+  const manQ = opts.manQ !== undefined ? opts.manQ : (document.getElementById('manQ')?.checked || false);
+  const offH = (dirQ ? 8 : 0) + (manQ ? 8 : 0);
+
+  if (t === 0) {
+    rows.push({ role:'專任管理人員', count:Math.ceil(beds/10), ft:true, key:'manager' });
+    if (beds >= 100) {
+      const g = Math.floor(beds/100);
+      rows.push({ role:'社會工作人員',    count:g, ft:true, key:'sw' });
+      rows.push({ role:'護理人員',        count:g, ft:true, key:'nurse' });
+      rows.push({ role:'職能治療師（生）', count:g, ft:true, key:'ot' });
+      rows.push({ role:'臨床心理師',      count:g, ft:true, key:'psy', note:'得專任或兼任' });
+    } else if (beds >= 50) {
+      rows.push({ role:'社會工作人員',    count:1, ft:true,  key:'sw' });
+      rows.push({ role:'職能治療師（生）', count:1, ft:false, key:'ot',    note:'兼任，三類至少選2類各1人' });
+      rows.push({ role:'護理人員',        count:1, ft:false, key:'nurse', note:'兼任，三類至少選2類各1人' });
+      rows.push({ role:'臨床心理師',      count:1, ft:false, key:'psy',   note:'兼任，三類至少選2類各1人' });
+    } else {
+      const rH = reqHours(beds, 0), remH = Math.max(0, rH - offH), full = remH === 0 && offH > 0;
+      rows.push({ role:'社會工作人員', count:1, ft:false, key:'sw' });
+      rows.push({ role:'護理/OT師生/臨床心理師', count:full?0:1, ft:false, key:'nurse', offsetted:full,
+        note: full ? `已由具資格人員抵任（抵 ${offH} hr，需 ${rH} hr/週）`
+                   : offH > 0 ? `仍需兼任 ${remH} hr/週（已抵 ${offH}/${rH} hr）`
+                              : '三類至少選1類；每10人需≥4 hr/週' });
+    }
+  } else if (t === 1) {
+    rows.push({ role:'專任管理人員', count:Math.ceil(beds/15), ft:true, key:'manager' });
+    if (beds >= 100) {
+      const g = Math.floor(beds/100);
+      rows.push({ role:'社會工作人員',    count:g, ft:true, key:'sw' });
+      rows.push({ role:'護理人員',        count:g, ft:true, key:'nurse' });
+      rows.push({ role:'職能治療師（生）', count:g, ft:true, key:'ot' });
+      rows.push({ role:'臨床心理師',      count:g, ft:true, key:'psy', note:'得專任或兼任' });
+    } else if (beds >= 50) {
+      rows.push({ role:'職能治療師（生）', count:1, ft:true,  key:'ot' });
+      rows.push({ role:'社會工作人員',    count:1, ft:false, key:'sw',    note:'兼任，三類至少選2類各1人' });
+      rows.push({ role:'護理人員',        count:1, ft:false, key:'nurse', note:'兼任，三類至少選2類各1人' });
+      rows.push({ role:'臨床心理師',      count:1, ft:false, key:'psy',   note:'兼任，三類至少選2類各1人' });
+    } else {
+      const rH = reqHours(beds, 1), remH = Math.max(0, rH - offH), full = remH === 0 && offH > 0;
+      const n = full ? `已由具資格人員抵任（抵 ${offH} hr，需 ${rH} hr/週）`
+                     : offH > 0 ? `仍需兼任 ${remH} hr/週（已抵 ${offH}/${rH} hr）`
+                                : '每15人需≥5 hr/週';
+      rows.push({ role:'職能治療師（生）', count:full?0:1, ft:false, key:'ot',  offsetted:full, note:n });
+      rows.push({ role:'社工/護理/臨床心理師', count:full?0:1, ft:false, key:'sw', offsetted:full,
+        note: full ? '已由具資格人員抵任' : '三類至少選1類' });
+    }
+  } else {
+    rows.push({ role:'護理人員',   count:Math.ceil(beds/20), ft:true, key:'nurse' });
+    rows.push({ role:'照顧服務員', count:Math.ceil(beds/10), ft:true, key:'caregiver' });
+    rows.push(beds >= 100
+      ? { role:'社會工作人員', count:Math.ceil(beds/100), ft:true,  key:'sw' }
+      : { role:'社會工作人員', count:1, ft:false, key:'sw', note:'兼任' });
+    rows.push(beds >= 200
+      ? { role:'職能治療人員', count:Math.ceil(beds/200), ft:true,  key:'ot', note:'200床以上至少1名OT師（正）' }
+      : { role:'職能治療人員', count:1, ft:false, key:'ot',  note:'兼任' });
+    rows.push(beds >= 200
+      ? { role:'臨床心理人員', count:Math.ceil(beds/200), ft:true,  key:'psy' }
+      : { role:'臨床心理人員', count:1, ft:false, key:'psy', note:'兼任' });
+  }
+  return rows;
+}
+
+// ── Qualification panel ────────────────────────
+function renderQualPanel(beds, t) {
+  const panel = document.getElementById('qualPanel');
+  if (t >= 2 || beds > 49 || beds < 1) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  const dirQ = document.getElementById('dirQ')?.checked || false;
+  const manQ = document.getElementById('manQ')?.checked || false;
+  const rH = reqHours(beds, t), offH = (dirQ?8:0)+(manQ?8:0), remH = Math.max(0, rH-offH);
+  const full = remH === 0 && offH > 0;
+  let html = `<div class="hbox ${full?'':'warn'}">
+    <div class="hr"><span>法定兼任時數需求</span><span class="fw7">${rH} hr / 週</span></div>`;
+  if (offH > 0) {
+    html += `<div class="hr"><span>具資格人員可抵任</span><span class="fw7">－${offH} hr / 週</span></div>
+    <div class="hr ${full?'ok':'ng'}"><span>${full?'✓ 全額抵任，無需另聘兼任專業人員':'尚需兼任服務'}</span><span>${full?'':remH+' hr / 週'}</span></div>`;
+  } else {
+    html += `<div class="hr tg fs11"><span>勾選資格選項以計算可抵任時數</span></div>`;
+  }
+  document.getElementById('hoursBox').innerHTML = html + '</div>';
+}
+
+// ── Staff requirement table ────────────────────
+function renderReqTable(staff) {
+  const total = staff.reduce((a,s) => a+s.count, 0);
+  let html = '<table class="st"><thead><tr><th>職種</th><th style="text-align:center">最低人數</th><th>任用</th></tr></thead><tbody>';
+  for (const s of staff) {
+    const bc = s.offsetted?'bo':(s.ft?'bf':'bp');
+    const bt = s.offsetted?'已抵任':(s.ft?'專任':'兼任');
+    html += `<tr style="${s.offsetted?'opacity:.5':''}">
+      <td>${s.role}${s.note?`<br><span class="fs11 tg">（${s.note}）</span>`:''}</td>
+      <td style="text-align:center;font-weight:700">${s.offsetted?'—':s.count}</td>
+      <td><span class="badge ${bc}">${bt}</span></td></tr>`;
+  }
+  html += `</tbody><tfoot><tr><td class="fw7">合計</td><td style="text-align:center;font-weight:800">${total}</td><td></td></tr></tfoot></table>`;
+  document.getElementById('staffReqTable').innerHTML = html;
+}
+
+// ── Staff cost grid ────────────────────────────
+function renderCostRows(staff) {
+  if (!staff.length) { document.getElementById('staffCostRows').innerHTML = ''; return; }
+  let html = `<div class="cgrid">
+    <div class="cg-hd">職種</div>
+    <div class="cg-hd c">人數</div>
+    <div class="cg-hd c">月薪（元）</div>
+    <div class="cg-hd r">小計</div>`;
+  staff.forEach((s, i) => {
+    const sal  = s.ft ? SAL[s.key].ft : SAL[s.key].pt;
+    const fade = s.offsetted ? 'opacity:.4;' : '';
+    const bc   = s.offsetted?'bo':(s.ft?'bf':'bp');
+    const bt   = s.offsetted?'已抵任':(s.ft?'專任':'兼任');
+    html += `
+    <div class="cg-td" style="${fade}">
+      <div><div class="fw6 fs12">${s.role}</div><span class="badge ${bc}" style="margin-top:3px">${bt}</span></div>
+    </div>
+    <div class="cg-td c" style="${fade}">
+      <input type="number" id="cnt_${i}" value="${s.count}" min="0" oninput="recalc()" ${s.offsetted?'disabled':''}>
+    </div>
+    <div class="cg-td" style="${fade}">
+      <input type="number" id="sal_${i}" value="${sal}" min="0" oninput="recalc()" ${s.offsetted?'disabled':''} style="text-align:right">
+    </div>
+    <div class="cg-td r fw6 fs12" id="sub_${i}" style="${fade}color:${s.offsetted?'var(--gray-400)':'var(--blue)'}">
+      ${s.offsetted?'—':'$0'}
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('staffCostRows').innerHTML = html;
+}
+
+// ── Format ────────────────────────────────────
+function fmt(n) { return '$' + Math.round(n).toLocaleString('zh-TW'); }
+
+// ── recalc ────────────────────────────────────
+function recalc() {
+  const burden = 1 + (parseFloat(document.getElementById('burden').value)||0)/100;
+  let staffTotal = 0;
+  currentStaff.forEach((s, i) => {
+    const el = document.getElementById('sub_'+i);
+    if (s.offsetted) { if (el) el.textContent = '—'; return; }
+    const cnt = parseInt(document.getElementById('cnt_'+i)?.value)||0;
+    const sal = parseInt(document.getElementById('sal_'+i)?.value)||0;
+    const sub = cnt * sal * burden;
+    staffTotal += sub;
+    if (el) el.textContent = fmt(sub);
+  });
+  document.getElementById('staffSub').textContent = fmt(staffTotal);
+
+  const beds   = parseInt(document.getElementById('planBeds').value)||0;
+  const occ    = parseInt(document.getElementById('occ').value)/100;
+  const ocBeds = Math.round(beds * occ);
+
+  const rent   = parseFloat(document.getElementById('c_rent').value)||0;
+  const util   = parseFloat(document.getElementById('c_util').value)||0;
+  const foodPer= parseFloat(document.getElementById('c_food').value)||0;
+  const supply = parseFloat(document.getElementById('c_supply').value)||0;
+  const ins    = parseFloat(document.getElementById('c_ins').value)||0;
+  const equip  = parseFloat(document.getElementById('c_equip').value)||0;
+  const admin  = parseFloat(document.getElementById('c_admin').value)||0;
+  const other  = parseFloat(document.getElementById('c_other').value)||0;
+
+  const food = foodPer * ocBeds;
+  const fac  = rent + util + equip;
+  const adm  = supply + ins + admin + other;
+  document.getElementById('otherSub').textContent = fmt(food + fac + adm);
+
+  // Setup costs
+  const setupIds = ['s_reno','s_ac','s_nurseq','s_kitchen','s_it','s_hw_other',
+                    's_fire','s_fire2','s_arch','s_design','s_lic','s_dep','s_other2'];
+  let setupTotal = setupIds.reduce((sum,id) => sum+(parseFloat(document.getElementById(id)?.value)||0), 0);
+  document.querySelectorAll('#setup_custom .cs-amt').forEach(el => { setupTotal += parseFloat(el.value)||0; });
+  const amortYears   = Math.max(1, parseInt(document.getElementById('amortYears')?.value)||5);
+  const amortMonthly = setupTotal / (amortYears * 12);
+  const inclAmort    = document.getElementById('inclAmort')?.checked || false;
+
+  document.getElementById('setupTotal').textContent    = fmt(setupTotal);
+  document.getElementById('amortMonthly').textContent  = fmt(amortMonthly);
+
+  const amortRow = document.getElementById('b_amort_row');
+  if (amortRow) amortRow.style.display = inclAmort ? 'flex' : 'none';
+  const ayEl = document.getElementById('b_amort_years');
+  if (ayEl) ayEl.textContent = amortYears;
+  const amEl = document.getElementById('b_amort');
+  if (amEl) amEl.textContent = fmt(amortMonthly);
+
+  const total  = staffTotal + food + fac + adm + (inclAmort ? amortMonthly : 0);
+  const perBed = beds > 0 ? total/beds : 0;
+  const be     = ocBeds > 0 ? total/ocBeds : 0;
+
+  document.getElementById('sm_month').textContent   = fmt(total);
+  document.getElementById('sm_year').textContent    = fmt(total*12);
+  document.getElementById('sm_perbed').textContent  = fmt(perBed);
+  document.getElementById('sm_be').textContent      = fmt(be);
+  document.getElementById('sm_be_note').textContent = `入住率 ${Math.round(occ*100)}% — ${ocBeds} 床/人`;
+  document.getElementById('b_staff').textContent    = fmt(staffTotal);
+  document.getElementById('b_food').textContent     = fmt(food);
+  document.getElementById('b_fac').textContent      = fmt(fac);
+  document.getElementById('b_adm').textContent      = fmt(adm);
+  document.getElementById('b_total').textContent    = fmt(total);
+}
+
+// ── calc ──────────────────────────────────────
+function calc() {
+  const T    = TYPES[typeIdx];
+  const area = parseFloat(document.getElementById('area').value)||0;
+  const maxB = Math.floor(area / T.areaPerUnit);
+
+  document.getElementById('maxBeds').textContent    = maxB;
+  document.getElementById('unitLabel').textContent  = T.unit;
+  document.getElementById('unitLabel2').textContent = T.unit;
+  document.getElementById('areaRule').textContent   = T.areaRule;
+  document.getElementById('extraRules').textContent = T.extra;
+
+  const pb = document.getElementById('planBeds');
+  let v = maxB;
+  pb.value = maxB;
+
+  document.getElementById('occD').textContent = document.getElementById('occ').value + '%';
+
+  renderQualPanel(v, typeIdx);
+  currentStaff = getStaff(v, typeIdx);
+  renderReqTable(currentStaff);
+  renderCostRows(currentStaff);
+
+  {
+    const notes = [
+      '24 小時均應有機構內相關人員上班。兼任專業人員每 10 人應有每週至少 4 小時服務時數。',
+      '兼任專業人員每 15 人應有每週至少 5 小時服務時數。',
+      '護理人員＋照顧服務員任何時段總數：住民比不得低於 1:20。夜間照顧人力得計入輔助人員（駐衛警、保全、行政等）。',
+    ];
+    let extra = '';
+    if (typeIdx <= 1 && v > 0 && v <= 49) {
+      const rH = reqHours(v, typeIdx);
+      extra = `目前收治 ${v} 人 → 兼任時數需求：<strong>${rH} hr / 週</strong>`;
+    }
+    const el = document.getElementById('staffNote');
+    el.innerHTML = notes[typeIdx] + (extra ? '<br>' + extra : '');
+  }
+
+  recalc();
+}
+
+// ── setType ───────────────────────────────────
+function setType(i) {
+  typeIdx = i;
+  [0,1,2].forEach(j => document.getElementById('tab'+j).classList.toggle('on', j===i));
+  const area = parseFloat(document.getElementById('area').value)||0;
+  const maxB = Math.floor(area / TYPES[i].areaPerUnit);
+  document.getElementById('planBeds').value = Math.max(1, Math.min(maxB, maxB));
+  calc();
+}
+
+// ── Conversion tool ───────────────────────────
+const PING = 3.305785124;
+function convFrom(src) {
+  if (src === 'm2') {
+    const v = parseFloat(document.getElementById('conv_m2').value);
+    document.getElementById('conv_ping').value = isNaN(v) ? '' : (v / PING).toFixed(2);
+  } else {
+    const v = parseFloat(document.getElementById('conv_ping').value);
+    document.getElementById('conv_m2').value = isNaN(v) ? '' : (v * PING).toFixed(2);
+  }
+}
+
+// ── Custom setup items ────────────────────────
+let csrCounter = 0;
+
+function addSetupItem(name='', amt=0, silent=false) {
+  const div = document.createElement('div');
+  div.className = 'csr';
+  div.innerHTML = `
+    <input type="text" class="cs-name" placeholder="項目名稱（如：床墊、書桌…）" oninput="recalc()">
+    <div class="cinput">
+      <input type="number" class="cs-amt" value="0" min="0" oninput="recalc()">
+      <span class="sfx">元</span>
+    </div>
+    <button class="csr-del" onclick="this.closest('.csr').remove();recalc()" title="刪除">✕</button>`;
+  div.querySelector('.cs-name').value = name;
+  div.querySelector('.cs-amt').value = amt;
+  document.getElementById('setup_custom').appendChild(div);
+  if (!silent) recalc();
+}
+
+// ── Profile management ────────────────────────
+const PROFILE_KEY = 'rehab_profiles_v1';
+let currentProfileId = null;
+
+function getProfiles() { return JSON.parse(localStorage.getItem(PROFILE_KEY)||'[]'); }
+function setProfiles(arr) { localStorage.setItem(PROFILE_KEY, JSON.stringify(arr)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderProfileSelect() {
+  const sel = document.getElementById('pb_select');
+  const profiles = getProfiles();
+  sel.innerHTML = '<option value="">— 未載入設定檔 —</option>' +
+    profiles.map(p => `<option value="${p.id}"${p.id===currentProfileId?' selected':''}>${escHtml(p.name)}</option>`).join('');
+}
+
+function collectState() {
+  const get = id => { const el=document.getElementById(id); if(!el)return 0; return el.type==='checkbox'?el.checked:(parseFloat(el.value)||0); };
+  const staffData = currentStaff.map((s,i) => ({
+    cnt: parseInt(document.getElementById('cnt_'+i)?.value)||s.count,
+    sal: parseInt(document.getElementById('sal_'+i)?.value)||(s.ft?SAL[s.key].ft:SAL[s.key].pt),
+  }));
+  return {
+    typeIdx, area:get('area'), planBeds:get('planBeds'), occ:get('occ'),
+    dirQ:get('dirQ'), manQ:get('manQ'), burden:get('burden'),
+    c_rent:get('c_rent'), c_util:get('c_util'), c_food:get('c_food'),
+    c_supply:get('c_supply'), c_ins:get('c_ins'), c_equip:get('c_equip'),
+    c_admin:get('c_admin'), c_other:get('c_other'),
+    s_reno:get('s_reno'), s_ac:get('s_ac'), s_nurseq:get('s_nurseq'),
+    s_kitchen:get('s_kitchen'), s_it:get('s_it'), s_hw_other:get('s_hw_other'),
+    s_fire:get('s_fire'), s_fire2:get('s_fire2'), s_arch:get('s_arch'),
+    s_design:get('s_design'), s_lic:get('s_lic'), s_dep:get('s_dep'), s_other2:get('s_other2'),
+    amortYears:get('amortYears'), inclAmort:get('inclAmort'),
+    staffData,
+    customSetup: [...document.querySelectorAll('#setup_custom .csr')].map(row => ({
+      name:   row.querySelector('.cs-name').value,
+      amount: parseFloat(row.querySelector('.cs-amt').value)||0,
+    })),
+  };
+}
+
+function applyState(state) {
+  const set = (id,v) => { const el=document.getElementById(id); if(!el)return; if(el.type==='checkbox')el.checked=!!v; else el.value=v; };
+  typeIdx = state.typeIdx||0;
+  [0,1,2].forEach(j => document.getElementById('tab'+j).classList.toggle('on', j===typeIdx));
+  set('area',state.area||0); set('planBeds',state.planBeds||1); set('occ',state.occ||85);
+  set('dirQ',state.dirQ||false); set('manQ',state.manQ||false); set('burden',state.burden||18);
+  set('c_rent',state.c_rent||0); set('c_util',state.c_util||0); set('c_food',state.c_food||0);
+  set('c_supply',state.c_supply||0); set('c_ins',state.c_ins||0); set('c_equip',state.c_equip||0);
+  set('c_admin',state.c_admin||0); set('c_other',state.c_other||0);
+  set('s_reno',state.s_reno||0); set('s_ac',state.s_ac||0); set('s_nurseq',state.s_nurseq||0);
+  set('s_kitchen',state.s_kitchen||0); set('s_it',state.s_it||0); set('s_hw_other',state.s_hw_other||0);
+  set('s_fire',state.s_fire||0); set('s_fire2',state.s_fire2||0); set('s_arch',state.s_arch||0);
+  set('s_design',state.s_design||0); set('s_lic',state.s_lic||0); set('s_dep',state.s_dep||0);
+  set('s_other2',state.s_other2||0); set('amortYears',state.amortYears||5); set('inclAmort',state.inclAmort||false);
+  document.getElementById('setup_custom').innerHTML='';
+  csrCounter=0;
+  (state.customSetup||[]).forEach(item=>addSetupItem(item.name,item.amount,true));
+  calc();
+  if (state.staffData) {
+    state.staffData.forEach((sd,i) => {
+      const ce=document.getElementById('cnt_'+i), se=document.getElementById('sal_'+i);
+      if(ce&&!ce.disabled)ce.value=sd.cnt;
+      if(se&&!se.disabled)se.value=sd.sal;
+    });
+  }
+  recalc();
+}
+
+function computeSummary(state) {
+  const burden = 1 + (state.burden||0)/100;
+  const beds   = state.planBeds||0;
+  const occ    = (state.occ||85)/100;
+  const ocBeds = Math.round(beds*occ);
+  const staff  = getStaff(beds, state.typeIdx||0, { dirQ:!!state.dirQ, manQ:!!state.manQ });
+  let staffTotal = 0;
+  staff.forEach((s,i) => {
+    if (s.offsetted) return;
+    const sd = state.staffData && state.staffData[i];
+    const cnt = sd ? (sd.cnt||s.count) : s.count;
+    const sal = sd ? (sd.sal||(s.ft?SAL[s.key].ft:SAL[s.key].pt)) : (s.ft?SAL[s.key].ft:SAL[s.key].pt);
+    staffTotal += cnt * sal * burden;
+  });
+  const food = (state.c_food||0)*ocBeds;
+  const fac  = (state.c_rent||0)+(state.c_util||0)+(state.c_equip||0);
+  const adm  = (state.c_supply||0)+(state.c_ins||0)+(state.c_admin||0)+(state.c_other||0);
+  const setupIds = ['s_reno','s_ac','s_nurseq','s_kitchen','s_it','s_hw_other','s_fire','s_fire2','s_arch','s_design','s_lic','s_dep','s_other2'];
+  const customTotal  = (state.customSetup||[]).reduce((sum,item)=>sum+(item.amount||0),0);
+  const setupTotal   = setupIds.reduce((sum,k)=>sum+(state[k]||0),0) + customTotal;
+  const amortMonthly = setupTotal/Math.max(1,(state.amortYears||5))/12;
+  const amort = state.inclAmort ? amortMonthly : 0;
+  const total = staffTotal+food+fac+adm+amort;
+  const perBed = beds>0?total/beds:0;
+  const be     = ocBeds>0?total/ocBeds:0;
+  return { staffTotal, food, fac, adm, amort, total, perBed, be, ocBeds, setupTotal, amortMonthly };
+}
+
+function saveProfile() {
+  const name = document.getElementById('pb_name').value.trim();
+  if (!name) { showToast('請輸入設定檔名稱'); return; }
+  const profiles = getProfiles();
+  const state = collectState();
+  if (currentProfileId) {
+    const idx = profiles.findIndex(p=>p.id===currentProfileId);
+    if (idx>=0) profiles[idx] = {...profiles[idx], name, state, updatedAt:Date.now()};
+    else { profiles.push({id:currentProfileId, name, state, updatedAt:Date.now()}); }
+  } else {
+    const id=uid(); currentProfileId=id;
+    profiles.push({id, name, state, updatedAt:Date.now()});
+  }
+  setProfiles(profiles);
+  renderProfileSelect();
+  showToast('已儲存：'+name);
+}
+
+function saveAsProfile() {
+  currentProfileId = null;
+  if (!document.getElementById('pb_name').value.trim()) {
+    const typeName = ['住宿型','日間型','護理之家'][typeIdx];
+    document.getElementById('pb_name').value = typeName+' 設定檔 '+(getProfiles().length+1);
+  }
+  saveProfile();
+}
+
+function loadSelectedProfile() {
+  const id = document.getElementById('pb_select').value;
+  if (!id) { currentProfileId=null; return; }
+  const p = getProfiles().find(x=>x.id===id);
+  if (!p) return;
+  currentProfileId = id;
+  document.getElementById('pb_name').value = p.name;
+  applyState(p.state);
+  showToast('已載入：'+p.name);
+}
+
+function deleteSelectedProfile() {
+  if (!currentProfileId) { showToast('請先選擇設定檔'); return; }
+  const profiles = getProfiles();
+  const p = profiles.find(x=>x.id===currentProfileId);
+  if (!p || !confirm('確定要刪除「'+p.name+'」？')) return;
+  setProfiles(profiles.filter(x=>x.id!==currentProfileId));
+  currentProfileId=null;
+  document.getElementById('pb_name').value='';
+  renderProfileSelect();
+  showToast('已刪除');
+}
+
+function openCompare() {
+  const profiles = getProfiles();
+  if (profiles.length < 2) { showToast('至少需要 2 個設定檔才能比較'); return; }
+  const opts = profiles.map(p=>`<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
+  document.getElementById('cmp_a').innerHTML = opts;
+  document.getElementById('cmp_b').innerHTML = opts;
+  if (currentProfileId) document.getElementById('cmp_a').value = currentProfileId;
+  const others = profiles.filter(p=>p.id!==document.getElementById('cmp_a').value);
+  if (others.length) document.getElementById('cmp_b').value = others[0].id;
+  document.getElementById('cmpModal').classList.add('open');
+  renderCompare();
+}
+
+function closeCompare() { document.getElementById('cmpModal').classList.remove('open'); }
+
+function renderCompare() {
+  const profiles = getProfiles();
+  const pA = profiles.find(x=>x.id===document.getElementById('cmp_a').value);
+  const pB = profiles.find(x=>x.id===document.getElementById('cmp_b').value);
+  if (!pA||!pB) { document.getElementById('cmpTable').innerHTML='<p class="tg" style="padding:16px 0">請選擇兩個設定檔</p>'; return; }
+  const sA = computeSummary(pA.state), sB = computeSummary(pB.state);
+  const typeName = ['住宿型精神復健機構','日間型精神復健機構','精神護理之家'];
+
+  function cmpRow(label, vA, vB, lowerBetter=true) {
+    const a=Math.round(vA), b=Math.round(vB);
+    let tA,tB;
+    if(a===b){tA=tB='<span class="cmp-tag tie">持平</span>';}
+    else if(lowerBetter){tA=a<b?'<span class="cmp-tag win">較佳</span>':'<span class="cmp-tag los">較高</span>';tB=b<a?'<span class="cmp-tag win">較佳</span>':'<span class="cmp-tag los">較高</span>';}
+    else{tA=a>b?'<span class="cmp-tag win">較佳</span>':'<span class="cmp-tag los">較低</span>';tB=b>a?'<span class="cmp-tag win">較佳</span>':'<span class="cmp-tag los">較低</span>';}
+    const dv=b-a, dvTxt=dv===0?'—':(dv>0?'+':'')+Math.round(Math.abs(dv)).toLocaleString('zh-TW')+(dv>0?'':' (↓)');
+    const dvCls=dv===0?'dz':(lowerBetter?(dv>0?'dhi':'dlo'):(dv>0?'dlo':'dhi'));
+    return `<tr><td>${label}</td><td class="cmp-num">${fmt(a)}${tA}</td><td class="cmp-num">${fmt(b)}${tB}</td><td class="cmp-num ${dvCls}">${dvTxt}</td></tr>`;
+  }
+
+  const showAmort = pA.state.inclAmort||pB.state.inclAmort;
+  let html = `<table class="ctbl">
+  <thead><tr><th style="width:32%">指標</th><th>A：${escHtml(pA.name)}</th><th>B：${escHtml(pB.name)}</th><th>差異（B－A）</th></tr></thead>
+  <tbody>
+  <tr class="shd"><td colspan="4">基本資訊</td></tr>
+  <tr><td>機構類型</td><td class="cmp-num">${typeName[pA.state.typeIdx||0]}</td><td class="cmp-num">${typeName[pB.state.typeIdx||0]}</td><td></td></tr>
+  <tr><td>規劃床數</td><td class="cmp-num">${pA.state.planBeds||0} 床</td><td class="cmp-num">${pB.state.planBeds||0} 床</td><td class="cmp-num">${(pB.state.planBeds||0)-(pA.state.planBeds||0) > 0?'+':''}${(pB.state.planBeds||0)-(pA.state.planBeds||0)} 床</td></tr>
+  <tr><td>入住率</td><td class="cmp-num">${pA.state.occ||85}%</td><td class="cmp-num">${pB.state.occ||85}%</td><td></td></tr>
+  <tr class="shd"><td colspan="4">月度成本明細</td></tr>
+  ${cmpRow('人力成本（含勞健保）', sA.staffTotal, sB.staffTotal)}
+  ${cmpRow('餐費（依入住率）', sA.food, sB.food)}
+  ${cmpRow('房租＋水電＋設備折舊', sA.fac, sB.fac)}
+  ${cmpRow('耗材＋保險＋行政＋其他', sA.adm, sB.adm)}
+  ${showAmort?cmpRow('前期建置攤提', sA.amort, sB.amort):''}
+  <tr class="tot"><td>月總成本</td><td class="cmp-num">${fmt(Math.round(sA.total))}</td><td class="cmp-num">${fmt(Math.round(sB.total))}</td>
+    <td class="cmp-num ${sB.total>sA.total?'dhi':'dlo'}">${sB.total>sA.total?'+':''}${fmt(Math.round(sB.total-sA.total))}</td></tr>
+  <tr class="shd"><td colspan="4">效益指標</td></tr>
+  ${cmpRow('每床月成本', sA.perBed, sB.perBed)}
+  ${cmpRow('損益平衡每床收費', sA.be, sB.be)}
+  </tbody></table>`;
+
+  // Optimization hints
+  const cats = [
+    {label:'人力成本', a:sA.staffTotal, b:sB.staffTotal},
+    {label:'餐費',     a:sA.food,       b:sB.food},
+    {label:'設施費用', a:sA.fac,        b:sB.fac},
+    {label:'行政雜費', a:sA.adm,        b:sB.adm},
+  ];
+  const hints = [];
+  // Biggest cost driver for each
+  const bigA = [...cats].sort((x,y)=>y.a-x.a)[0];
+  const bigB = [...cats].sort((x,y)=>y.b-x.b)[0];
+  const pctA = sA.total>0?Math.round(bigA.a/sA.total*100):0;
+  const pctB = sB.total>0?Math.round(bigB.b/sB.total*100):0;
+  hints.push(`A 方案最大支出項目為「${bigA.label}」，佔月度總成本 ${pctA}%`);
+  if (bigA.label!==bigB.label) hints.push(`B 方案最大支出項目為「${bigB.label}」，佔月度總成本 ${pctB}%`);
+
+  // Who wins overall
+  const lowerBe = sA.be<=sB.be?pA.name:pB.name;
+  const lowerPB = sA.perBed<=sB.perBed?pA.name:pB.name;
+  if (lowerBe===lowerPB) hints.push(`「${lowerBe}」在每床成本與損益平衡收費兩項均較優，整體成本效益較高`);
+  else { hints.push(`「${lowerBe}」損益平衡收費較低，市場定價彈性較大`); hints.push(`「${lowerPB}」每床月成本較低，固定支出效率較高`); }
+
+  // Staff ratio warning
+  if (sA.total>0 && sA.staffTotal/sA.total>0.6) hints.push(`A 方案人力成本佔比 ${Math.round(sA.staffTotal/sA.total*100)}%，建議確認兼任人員是否都有實際需求，或評估負責人資格抵任方案`);
+  if (sB.total>0 && sB.staffTotal/sB.total>0.6) hints.push(`B 方案人力成本佔比 ${Math.round(sB.staffTotal/sB.total*100)}%，同上建議`);
+
+  // Beds vs cost
+  if ((pB.state.planBeds||0)>(pA.state.planBeds||0) && sB.perBed<sA.perBed) hints.push(`B 方案床數較多且每床成本更低，規模效益顯現，若市場需求允許可優先考慮`);
+
+  html += `<div class="opt-box"><div class="opt-title">📊 成本效益分析</div>${hints.map(h=>`<div class="opt-item">${h}</div>`).join('')}</div>`;
+  document.getElementById('cmpTable').innerHTML = html;
+}
+
+function exportProfiles() {
+  const profiles = getProfiles();
+  if (!profiles.length) { showToast('尚無設定檔可匯出'); return; }
+  const blob = new Blob([JSON.stringify(profiles, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'rehab_profiles_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('已匯出 ' + profiles.length + ' 個設定檔');
+}
+
+function importProfiles(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data) || !data.every(p=>p.id&&p.name&&p.state)) throw new Error();
+      const existing   = getProfiles();
+      const existingIds = new Set(existing.map(p=>p.id));
+      const toAdd = data.filter(p=>!existingIds.has(p.id));
+      const dup   = data.length - toAdd.length;
+      if (!confirm(`匯入 ${data.length} 個設定檔${dup?'（'+dup+' 個 ID 重複略過）':''}，確定繼續？`)) return;
+      setProfiles([...existing, ...toAdd]);
+      renderProfileSelect();
+      showToast('已匯入 ' + toAdd.length + ' 個設定檔' + (dup?' / '+dup+' 個略過':''));
+    } catch { showToast('檔案格式錯誤，請選擇正確的匯出檔'); }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+calc();
+renderProfileSelect();
+</script>
+</body>
+</html>
