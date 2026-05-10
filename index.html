@@ -179,17 +179,22 @@ input[type=range]{flex:1;accent-color:var(--blue)}
 .conv-hint{font-size:11px;color:var(--gray-400);margin-left:4px;white-space:nowrap}
 
 /* ── Profile bar ── */
-.profile-bar{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.pb-select{flex:0 0 auto;width:200px}
-.pb-name{flex:1;min-width:130px;max-width:220px;height:var(--input-h);padding:0 10px;border:1px solid var(--gray-300);border-radius:6px;font-size:13px;color:var(--gray-800)}
+.profile-bar{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+.pb-row1{display:flex;align-items:center;gap:8px;padding:10px 14px;flex-wrap:wrap}
+.pb-row2{display:flex;align-items:center;gap:6px;padding:6px 14px 8px;border-top:1px solid var(--gray-100);background:var(--gray-50);flex-wrap:wrap}
+.pb-row2-lbl{font-size:11px;font-weight:600;color:var(--gray-400);white-space:nowrap}
+.pb-sep{width:1px;height:18px;background:var(--gray-200);margin:0 2px;flex-shrink:0}
+.pb-export-row{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#eff6ff;border-top:1px solid #bfdbfe;flex-wrap:wrap}
+.pb-select{flex:0 0 auto;width:180px}
+.pb-name{flex:1;min-width:120px;max-width:200px;height:var(--input-h);padding:0 10px;border:1px solid var(--gray-300);border-radius:6px;font-size:13px;color:var(--gray-800)}
 .pb-name:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-.pb-btns{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
 .pbtn{height:var(--input-h);padding:0 12px;border:1px solid var(--gray-300);background:#fff;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
 .pbtn:hover{background:var(--gray-50)}
 .pbtn.prim{background:var(--blue);color:#fff;border-color:var(--blue)}
 .pbtn.prim:hover{background:#1d4ed8}
 .pbtn.acc{background:var(--purple);color:#fff;border-color:var(--purple)}
 .pbtn.acc:hover{background:#6d28d9}
+.pbtn.sm{font-size:11px;padding:0 9px}
 .pbtn.danger{color:var(--red)}
 .pbtn.danger:hover{background:#fef2f2}
 
@@ -308,17 +313,31 @@ input[type=range]{flex:1;accent-color:var(--blue)}
 
 <!-- Profile bar -->
 <div class="profile-bar no-print">
-  <select id="pb_select" class="pb-select" onchange="loadSelectedProfile()">
-    <option value="">— 未載入設定檔 —</option>
-  </select>
-  <input type="text" id="pb_name" class="pb-name" placeholder="設定檔名稱..." maxlength="40">
-  <div class="pb-btns">
-    <button class="pbtn prim" onclick="saveAndDownload()" title="儲存並下載更新後的 JSON">儲存</button>
+  <div class="pb-row1">
+    <select id="pb_select" class="pb-select" onchange="loadSelectedProfile()">
+      <option value="">— 選擇設定檔 —</option>
+    </select>
+    <input type="text" id="pb_name" class="pb-name" placeholder="設定檔名稱..." maxlength="40">
+    <button class="pbtn prim" onclick="saveProfile()">💾 儲存</button>
     <button class="pbtn" onclick="saveAsProfile()">另存新檔</button>
-    <button class="pbtn acc" onclick="openCompare()">⚖ 比較</button>
-    <button class="pbtn" onclick="exportProfiles()" title="匯出所有設定檔為 JSON 檔">匯出</button>
-    <button class="pbtn" onclick="document.getElementById('pb_import').click()" title="從 JSON 檔匯入設定檔">匯入</button>
-    <button class="pbtn danger" onclick="deleteSelectedProfile()">刪除</button>
+  </div>
+  <div class="pb-row2">
+    <span class="pb-row2-lbl">檔案操作：</span>
+    <button class="pbtn sm" onclick="showExportDialog()">📤 匯出 JSON</button>
+    <button class="pbtn sm" onclick="document.getElementById('pb_import').click()">📥 匯入 JSON</button>
+    <div class="pb-sep"></div>
+    <button class="pbtn sm acc" onclick="openCompare()">⚖ 比較方案</button>
+    <div class="pb-sep"></div>
+    <button class="pbtn sm danger" onclick="deleteSelectedProfile()">🗑 刪除設定檔</button>
+  </div>
+  <div class="pb-export-row" id="pbExportRow" style="display:none">
+    <span style="font-size:12px;font-weight:600;color:var(--blue-dark)">📤 匯出檔名：</span>
+    <input type="text" id="pb_export_name" class="pb-name" style="max-width:200px;flex:0 0 auto" placeholder="rehab-profiles"
+      onkeydown="if(event.key==='Enter')doExportConfirm();if(event.key==='Escape')document.getElementById('pbExportRow').style.display='none'">
+    <span class="sfx">.json</span>
+    <button class="pbtn prim" onclick="doExportConfirm()">確認下載</button>
+    <button class="pbtn" onclick="document.getElementById('pbExportRow').style.display='none'">取消</button>
+    <span style="font-size:11px;color:var(--gray-500);margin-left:4px">（共 <span id="pbExportCount">0</span> 個設定檔）</span>
   </div>
 </div>
 <input type="file" id="pb_import" accept=".json" style="display:none" onchange="importProfiles(event)">
@@ -1342,17 +1361,31 @@ function saveProfile() {
   showToast('已儲存：'+name);
 }
 
-function saveAndDownload() {
-  saveProfile();
+function showExportDialog() {
+  const profiles = getProfiles();
+  if (!profiles.length) { showToast('尚無設定檔可匯出'); return; }
+  const row = document.getElementById('pbExportRow');
+  const nameInput = document.getElementById('pb_export_name');
+  document.getElementById('pbExportCount').textContent = profiles.length;
+  nameInput.value = 'rehab-profiles-' + new Date().toISOString().slice(0,10);
+  row.style.display = 'flex';
+  setTimeout(() => { nameInput.focus(); nameInput.select(); }, 50);
+}
+
+function doExportConfirm() {
   const profiles = getProfiles();
   if (!profiles.length) return;
+  const raw = document.getElementById('pb_export_name').value.trim();
+  const filename = (raw || ('rehab-profiles-' + new Date().toISOString().slice(0,10)));
   const blob = new Blob([JSON.stringify(profiles, null, 2)], {type:'application/json'});
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = 'rehab_profiles_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = filename + '.json';
   a.click();
   URL.revokeObjectURL(url);
+  document.getElementById('pbExportRow').style.display = 'none';
+  showToast('已匯出 ' + profiles.length + ' 個設定檔 → ' + filename + '.json');
 }
 
 function saveAsProfile() {
@@ -1480,18 +1513,7 @@ function renderCompare() {
   document.getElementById('cmpTable').innerHTML = html;
 }
 
-function exportProfiles() {
-  const profiles = getProfiles();
-  if (!profiles.length) { showToast('尚無設定檔可匯出'); return; }
-  const blob = new Blob([JSON.stringify(profiles, null, 2)], {type:'application/json'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = 'rehab_profiles_' + new Date().toISOString().slice(0,10) + '.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('已匯出 ' + profiles.length + ' 個設定檔');
-}
+function exportProfiles() { showExportDialog(); }
 
 function importProfiles(e) {
   const file = e.target.files[0];
