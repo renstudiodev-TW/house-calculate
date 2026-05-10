@@ -349,12 +349,13 @@ input[type=range]{flex:1;accent-color:var(--blue)}
   <div class="card">
     <div class="ch b">建築物資訊</div>
     <div class="cb">
-      <div class="fg">
-        <label class="lbl">總樓地板面積（m²）<span class="tg fs11"> — 不含車庫、宿舍、陽台</span></label>
-        <div class="ig">
-          <input type="number" id="area" value="300" min="0" step="10" oninput="calc()">
-          <span class="sfx">m²</span>
+      <div class="rbox-edit">
+        <div class="rl">總樓地板面積</div>
+        <div>
+          <input type="number" class="rval-input" id="area" value="300" min="0" step="10" oninput="calc()">
+          <span class="runit">m²</span>
         </div>
+        <div class="rsub">不含車庫、宿舍、陽台</div>
       </div>
       <div class="rbox">
         <div class="rl">法定最大床數 / 服務量</div>
