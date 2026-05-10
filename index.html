@@ -137,6 +137,14 @@ input[type=number]:disabled{background:var(--gray-50);color:var(--gray-400);curs
 
 /* ── Notes ── */
 .note{background:#fef3c7;border-left:3px solid var(--amber);padding:8px 12px;font-size:11px;color:var(--gray-700);border-radius:0 4px 4px 0;margin-top:8px;line-height:1.6}
+.reg-panel{background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 14px;margin-top:10px;font-size:11px;color:var(--gray-700);line-height:1.75}
+.reg-panel summary{font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;user-select:none;padding:1px 0}
+.reg-panel summary::-webkit-details-marker{color:var(--blue)}
+.reg-panel ol{margin:6px 0 0 16px;padding:0}
+.reg-panel ol li{margin-bottom:4px}
+.reg-panel ul{margin:2px 0 0 14px;padding:0;list-style:disc}
+.reg-panel ul li{margin-bottom:2px}
+.reg-panel .reg-tag{display:inline-block;background:#dbeafe;color:var(--blue);border-radius:3px;padding:0 5px;font-size:10px;font-weight:700;margin-right:4px}
 .info{background:#eff6ff;border-left:3px solid var(--blue);padding:8px 12px;font-size:11px;color:var(--gray-700);border-radius:0 4px 4px 0;margin-top:8px;line-height:1.6}
 
 /* ── Slider ── */
@@ -230,13 +238,49 @@ input[type=range]{flex:1;accent-color:var(--blue)}
 
 /* ── Toast ── */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--gray-800);color:#fff;padding:10px 20px;border-radius:20px;opacity:0;transition:transform .3s,opacity .3s;z-index:9999;font-size:13px;pointer-events:none;white-space:nowrap}
+#autoSaveBadge{position:fixed;bottom:24px;right:20px;font-size:11px;color:var(--gray-400);background:var(--gray-100);border:1px solid var(--gray-200);border-radius:10px;padding:3px 10px;display:none;z-index:9998}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ── Revenue / P&L ── */
+.pnl-pos{color:var(--green);font-weight:700}
+.pnl-neg{color:var(--red);font-weight:700}
+
+/* ── Scenario / Cash‑flow table ── */
+.scen-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.scen-tbl th{background:var(--gray-100);padding:6px 8px;text-align:right;font-weight:600;color:var(--gray-700);border-bottom:1px solid var(--gray-200);font-size:11px}
+.scen-tbl th:first-child,.scen-tbl th:nth-child(2){text-align:center}
+.scen-tbl td{padding:5px 8px;border-bottom:1px solid var(--gray-100);text-align:right;font-variant-numeric:tabular-nums}
+.scen-tbl td:first-child,.scen-tbl td:nth-child(2){text-align:center}
+.scen-tbl td:first-child{font-weight:600}
+.scen-tbl tr.scen-cur{background:#eff6ff}
+.scen-tbl tr.scen-cur td:first-child{color:var(--blue)}
+.scen-tbl tr:last-child td{border-bottom:none}
+.scen-wrap{overflow-x:auto}
+
+/* ── Ramp bar ── */
+.ramp-bar{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:center;padding:10px 12px;background:var(--gray-50);border-radius:6px;font-size:12px;margin-bottom:12px;color:var(--gray-600)}
+.ramp-bar input[type=number]{width:50px;text-align:center;height:28px;padding:0 4px;border:1px solid var(--gray-300);border-radius:5px;font-size:12px}
+
+/* ── Print ── */
+@media print{
+  .no-print{display:none!important}
+  body{background:#fff}
+  .wrap{padding:8px 16px}
+  .ch{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .card{box-shadow:none;border:1px solid var(--gray-200);page-break-inside:avoid}
+  .modal-bg{display:none!important}
+}
 </style>
 </head>
 <body>
 <div class="hd">
-  <h1>精神醫療機構經營成本計算器</h1>
-  <p>依設置基準法規 · 自動計算最低法定人員 · 快速試算月度 / 年度經營成本</p>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+    <div>
+      <h1>精神醫療機構經營成本計算器</h1>
+      <p>依設置基準法規 · 自動計算最低法定人員 · 快速試算月度 / 年度經營成本 · 損益分析</p>
+    </div>
+    <button class="no-print" onclick="window.print()" style="flex-shrink:0;height:32px;padding:0 14px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;margin-top:2px">列印 / PDF</button>
+  </div>
 </div>
 <div class="wrap">
 
@@ -263,13 +307,13 @@ input[type=range]{flex:1;accent-color:var(--blue)}
 </div>
 
 <!-- Profile bar -->
-<div class="profile-bar">
+<div class="profile-bar no-print">
   <select id="pb_select" class="pb-select" onchange="loadSelectedProfile()">
     <option value="">— 未載入設定檔 —</option>
   </select>
   <input type="text" id="pb_name" class="pb-name" placeholder="設定檔名稱..." maxlength="40">
   <div class="pb-btns">
-    <button class="pbtn prim" onclick="saveProfile()">儲存</button>
+    <button class="pbtn prim" onclick="saveAndDownload()" title="儲存並下載更新後的 JSON">儲存</button>
     <button class="pbtn" onclick="saveAsProfile()">另存新檔</button>
     <button class="pbtn acc" onclick="openCompare()">⚖ 比較</button>
     <button class="pbtn" onclick="exportProfiles()" title="匯出所有設定檔為 JSON 檔">匯出</button>
@@ -331,6 +375,35 @@ input[type=range]{flex:1;accent-color:var(--blue)}
         <div id="hoursBox"></div>
       </div>
       <div class="note" id="staffNote"></div>
+      <div id="ptHoursPanel"></div>
+      <details class="reg-panel" id="nhRegPanel" style="display:none">
+        <summary>📋 兼任（特約）人員法規提醒</summary>
+        <ol>
+          <li>
+            <span class="reg-tag">第(3)項</span>須視業務需要，下列 4 類中置 <strong>2 類以上</strong>兼任人員：
+            <ul>
+              <li><strong>A</strong> 精神科醫師 — 提供機構巡診</li>
+              <li><strong>B</strong> 物理治療師（生）— 提供住民物理治療服務或轉介諮詢</li>
+              <li><strong>C</strong> 營養師 — 住民有營養問題時應提供營養諮詢服務</li>
+              <li><strong>D</strong> 一般科／家醫科醫師 — 提供機構巡診</li>
+            </ul>
+          </li>
+          <li>
+            <span class="reg-tag">第(4)項</span><strong>200 床以上</strong>另需設置：
+            <ul>
+              <li>職能治療人員 1 人（每 200 床 1 人），且其中至少 1 名為職能治療師（正）</li>
+              <li>臨床心理師 1 人（每 200 床 1 人）</li>
+            </ul>
+          </li>
+          <li>
+            <span class="reg-tag">第(5)項</span><strong>未滿 200 床</strong>另需設置：
+            <ul>
+              <li>兼任職能治療人員 1 人，每 20 床每週服務時數至少 4 小時</li>
+              <li>兼任臨床心理師 1 人，每 20 床每週服務時數至少 4 小時</li>
+            </ul>
+          </li>
+        </ol>
+      </details>
     </div>
   </div>
 </div>
@@ -359,10 +432,12 @@ input[type=range]{flex:1;accent-color:var(--blue)}
   <div class="card">
     <div class="ch s">其他月度成本</div>
     <div class="cb">
-      <div class="crow"><span class="clabel">租金 / 房屋攤提</span>
+      <div class="crow"><span class="clabel">房屋租金</span>
         <div class="cinput"><input type="number" id="c_rent"   value="50000" oninput="recalc()"><span class="sfx">元/月</span></div></div>
-      <div class="crow"><span class="clabel">水電費</span>
-        <div class="cinput"><input type="number" id="c_util"   value="15000" oninput="recalc()"><span class="sfx">元/月</span></div></div>
+      <div class="crow"><span class="clabel">水費（每床/人）</span>
+        <div class="cinput"><input type="number" id="c_water" value="1000" oninput="recalc()"><span class="sfx">元/月</span></div></div>
+      <div class="crow"><span class="clabel">電費（每床/人）</span>
+        <div class="cinput"><input type="number" id="c_elec"  value="2750" oninput="recalc()"><span class="sfx">元/月</span></div></div>
       <div class="crow"><span class="clabel">餐費（每床/人）</span>
         <div class="cinput"><input type="number" id="c_food"   value="6000"  oninput="recalc()"><span class="sfx">元/月</span></div></div>
       <div class="crow"><span class="clabel">耗材 / 醫材</span>
@@ -440,23 +515,109 @@ input[type=range]{flex:1;accent-color:var(--blue)}
 <div class="card">
   <div class="ch gd">經營成本總覽</div>
   <div class="cb">
-    <div class="sg">
+    <div class="sg" style="grid-template-columns:repeat(4,1fr)">
       <div class="sc"><div class="sl">月總成本</div><div class="sv b" id="sm_month">$0</div><div class="ss">元/月</div></div>
       <div class="sc"><div class="sl">年總成本</div><div class="sv b" id="sm_year">$0</div><div class="ss">元/年</div></div>
       <div class="sc"><div class="sl">每床月成本</div><div class="sv a" id="sm_perbed">$0</div><div class="ss">元/床/月</div></div>
       <div class="sc"><div class="sl">損益平衡收費</div><div class="sv r" id="sm_be">$0</div><div class="ss" id="sm_be_note">元/床/月</div></div>
     </div>
+    <div class="sg" style="grid-template-columns:repeat(4,1fr);margin-top:0">
+      <div class="sc"><div class="sl">月收入</div><div class="sv g" id="sm_rev">$0</div><div class="ss">元/月</div></div>
+      <div class="sc"><div class="sl">月盈虧</div><div class="sv" id="sm_pnl">$0</div><div class="ss">元/月</div></div>
+      <div class="sc"><div class="sl">年盈虧</div><div class="sv" id="sm_pnl_yr">$0</div><div class="ss">元/年</div></div>
+      <div class="sc"><div class="sl">前期回收期</div><div class="sv b" id="sm_payback">—</div></div>
+    </div>
     <div class="bk">
       <div class="bkr"><span>人力成本</span><span id="b_staff">$0</span></div>
       <div class="bkr"><span>餐費（依入住率）</span><span id="b_food">$0</span></div>
-      <div class="bkr"><span>房租 + 水電</span><span id="b_fac">$0</span></div>
+      <div class="bkr"><span>水電費（依入住率）</span><span id="b_util">$0</span></div>
+      <div class="bkr"><span>房屋租金</span><span id="b_fac">$0</span></div>
       <div class="bkr"><span>耗材 + 保險 + 行政 + 其他</span><span id="b_adm">$0</span></div>
       <div class="bkr" id="b_amort_row" style="display:none">
         <span>前期建置攤提（<span id="b_amort_years">5</span> 年）</span>
         <span id="b_amort">$0</span>
       </div>
       <div class="bkr tot"><span>月度合計</span><span id="b_total">$0</span></div>
+      <div class="dv"></div>
+      <div class="bkr"><span>月收入估算</span><span id="b_rev" class="pnl-pos">$0</span></div>
+      <div class="bkr tot" style="font-size:14px"><span>月盈虧</span><span id="b_pnl">$0</span></div>
     </div>
+  </div>
+</div>
+
+<!-- Revenue card -->
+<div class="card">
+  <div class="ch g">收入設定與損益估算</div>
+  <div class="cb">
+    <div class="note" style="margin-bottom:12px">健保 / 補助給付依衛福部公告調整；以下為參考預設值，請依實際合約修改。</div>
+    <div class="crow"><span class="clabel">健保 / 政府補助（每床 / 人 · 月）</span>
+      <div class="cinput"><input type="number" id="r_nhi" value="16000" min="0" oninput="recalc()"><span class="sfx">元</span></div></div>
+    <div class="crow"><span class="clabel">住民自費收費（每床 / 人 · 月）</span>
+      <div class="cinput"><input type="number" id="r_self" value="5000" min="0" oninput="recalc()"><span class="sfx">元</span></div></div>
+    <div class="crow"><span class="clabel">其他固定收入（月）</span>
+      <div class="cinput"><input type="number" id="r_other" value="0" min="0" oninput="recalc()"><span class="sfx">元</span></div></div>
+  </div>
+</div>
+
+<!-- Chart + Scenario grid -->
+<div class="g2">
+  <div class="card">
+    <div class="ch s">成本結構</div>
+    <div class="cb" style="display:flex;flex-direction:column;align-items:center">
+      <canvas id="pieChart" width="220" height="220" style="display:block;margin:0 auto 12px"></canvas>
+      <div id="pieLegend" style="width:100%"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch b">入住率情境分析</div>
+    <div class="cb">
+      <div class="scen-wrap"><div id="scenarioTable"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Cash flow card -->
+<div class="card">
+  <div class="ch gd">12 個月現金流預測</div>
+  <div class="cb">
+    <div class="info" style="margin-bottom:10px">以前期建置成本為第 0 月起始，依入住率爬坡累積月盈虧。</div>
+    <div class="ramp-bar" style="margin-bottom:10px">
+      <span style="font-weight:600">最低保留現金（警戒線）：</span>
+      <input type="number" id="cf_minReserve" value="300000" min="0" oninput="recalc()" style="width:110px">
+      <span>元　累計現金低於此值時標紅警示</span>
+    </div>
+    <!-- Mode toggle -->
+    <div style="display:flex;gap:12px;margin-bottom:8px">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--gray-700)">
+        <input type="radio" name="cf_mode" value="ramp" checked onchange="setCfMode()"> 爬坡期（百分比）
+      </label>
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--gray-700)">
+        <input type="radio" name="cf_mode" value="linear" onchange="setCfMode()"> 逐月新增人數
+      </label>
+    </div>
+    <!-- Ramp panel -->
+    <div id="cf_ramp_panel" class="ramp-bar">
+      <span style="font-weight:600">爬坡期設定：</span>
+      <span>月 1 至</span>
+      <input type="number" id="cf_r1end" value="3" min="1" max="6" oninput="recalc()">
+      <span>月</span>
+      <input type="number" id="cf_r1occ" value="40" min="10" max="100" oninput="recalc()">
+      <span>%　月</span>
+      <input type="number" id="cf_r2end" value="6" min="1" max="12" oninput="recalc()">
+      <span>月</span>
+      <input type="number" id="cf_r2occ" value="65" min="10" max="100" oninput="recalc()">
+      <span>%　月 7–12：目標入住率</span>
+    </div>
+    <!-- Linear panel -->
+    <div id="cf_linear_panel" class="ramp-bar" style="display:none">
+      <span style="font-weight:600">第 1 個月初始在住：</span>
+      <input type="number" id="cf_init" value="0" min="0" oninput="recalc()">
+      <span>人　每月淨新增：</span>
+      <input type="number" id="cf_delta" value="3" min="1" oninput="recalc()">
+      <span>人 / 月（達規劃床數後維持穩定）</span>
+    </div>
+    <div class="scen-wrap" id="cashFlowTable"></div>
+    <canvas id="cfChart" height="160" style="width:100%;display:block;margin-top:12px"></canvas>
   </div>
 </div>
 
@@ -483,6 +644,7 @@ input[type=range]{flex:1;accent-color:var(--blue)}
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<div id="autoSaveBadge">✓ 已自動儲存</div>
 
 <script>
 const TYPES = [
@@ -505,6 +667,10 @@ const SAL = {
   ot:       { ft:48000, pt:12000 },
   psy:      { ft:55000, pt:15000 },
   caregiver:{ ft:30000, pt:0 },
+  psydoc:   { ft:150000, pt:2000 },
+  ptther:   { ft:48000,  pt:600  },
+  nutri:    { ft:40000,  pt:500  },
+  gp:       { ft:120000, pt:1500 },
 };
 
 let typeIdx = 0;
@@ -579,12 +745,18 @@ function getStaff(beds, t, opts = {}) {
     rows.push(beds >= 100
       ? { role:'社會工作人員', count:Math.ceil(beds/100), ft:true,  key:'sw' }
       : { role:'社會工作人員', count:1, ft:false, key:'sw', note:'兼任' });
-    rows.push(beds >= 200
-      ? { role:'職能治療人員', count:Math.ceil(beds/200), ft:true,  key:'ot', note:'200床以上至少1名OT師（正）' }
-      : { role:'職能治療人員', count:1, ft:false, key:'ot',  note:'兼任' });
-    rows.push(beds >= 200
-      ? { role:'臨床心理人員', count:Math.ceil(beds/200), ft:true,  key:'psy' }
-      : { role:'臨床心理人員', count:1, ft:false, key:'psy', note:'兼任' });
+    rows.push({ role:'精神科醫師',       count:1, ft:false, key:'psydoc', defaultHr:1500, defaultHrs:2, note:'兼任特約 · 4類選2類（巡診）' });
+    rows.push({ role:'物理治療師（生）', count:1, ft:false, key:'ptther', defaultHr:500,  defaultHrs:4, note:'兼任特約 · 4類選2類' });
+    rows.push({ role:'營養師',           count:1, ft:false, key:'nutri',  defaultHr:450,  defaultHrs:2, note:'兼任特約 · 4類選2類' });
+    rows.push({ role:'一般科/家醫科醫師',count:1, ft:false, key:'gp',     defaultHr:1500, defaultHrs:2, note:'兼任特約 · 4類選2類（巡診）' });
+    if (beds >= 200) {
+      rows.push({ role:'職能治療人員', count:Math.ceil(beds/200), ft:true,  key:'ot', note:'200床以上至少1名OT師（正）' });
+      rows.push({ role:'臨床心理師',   count:Math.ceil(beds/200), ft:true,  key:'psy' });
+    } else {
+      const reqHrs = Math.ceil(beds / 20) * 4;
+      rows.push({ role:'職能治療人員', count:1, ft:false, key:'ot',  defaultHrs:reqHrs, note:`兼任 · 每20床週服務≥4hr（最低 ${reqHrs} hr/週）` });
+      rows.push({ role:'臨床心理師',   count:1, ft:false, key:'psy', defaultHrs:reqHrs, note:`兼任 · 每20床週服務≥4hr（最低 ${reqHrs} hr/週）` });
+    }
   }
   return rows;
 }
@@ -641,9 +813,9 @@ function renderCostRows(staff) {
     const salCell = s.ft
       ? `<input type="number" id="sal_${i}" value="${SAL[s.key].ft}" min="0" oninput="recalc()" ${dis} style="text-align:right">`
       : `<div style="display:flex;align-items:center;gap:3px;font-size:11px;width:100%">
-           <input type="number" id="hr_${i}"  value="190" min="0" oninput="recalc()" ${dis} style="width:52px;text-align:right;padding:0 4px">
+           <input type="number" id="hr_${i}"  value="${s.defaultHr||190}" min="0" oninput="recalc()" ${dis} style="width:52px;text-align:right;padding:0 4px">
            <span style="color:var(--gray-500);white-space:nowrap">元×</span>
-           <input type="number" id="hrs_${i}" value="8"   min="0" oninput="recalc()" ${dis} style="width:36px;text-align:center;padding:0 3px">
+           <input type="number" id="hrs_${i}" value="${s.defaultHrs||8}"  min="0" oninput="recalc()" ${dis} style="width:36px;text-align:center;padding:0 3px">
            <span style="color:var(--gray-500);white-space:nowrap">時/週</span>
          </div>`;
     html += `
@@ -664,6 +836,79 @@ function renderCostRows(staff) {
 
 // ── Format ────────────────────────────────────
 function fmt(n) { return '$' + Math.round(n).toLocaleString('zh-TW'); }
+
+// ── Part-time hours gap panel ──────────────────
+function updatePtHoursPanel() {
+  const panel = document.getElementById('ptHoursPanel');
+  const beds  = parseInt(document.getElementById('planBeds')?.value) || 0;
+  if (beds < 1) { panel.innerHTML = ''; return; }
+
+  // helper: sum hrs*cnt for all non-ft, non-offsetted rows matching keyFilter
+  const sumHrs = (keyFilter) => {
+    let total = 0;
+    currentStaff.forEach((s, i) => {
+      if (s.ft || s.offsetted) return;
+      if (keyFilter && !keyFilter.includes(s.key)) return;
+      const hrs = parseFloat(document.getElementById('hrs_' + i)?.value) || 0;
+      const cnt = parseInt(document.getElementById('cnt_'  + i)?.value) || 0;
+      total += hrs * cnt;
+    });
+    return total;
+  };
+
+  const hbox = (label, req, plan, note) => {
+    const gap = Math.max(0, req - plan);
+    const ok  = gap === 0;
+    return `<div class="hbox ${ok ? '' : 'warn'}" style="flex:1;min-width:0;margin:0">
+      <div class="hr" style="font-weight:700;font-size:12px">${label}</div>
+      <div class="hr"><span>法定最低</span><span class="fw7">${req} hr / 週</span></div>
+      <div class="hr"><span>目前配置</span><span class="fw7">${plan} hr / 週</span></div>
+      <div class="hr ${ok ? 'ok' : 'ng'}">
+        <span>${ok ? '✓ 已達標' : '⚠ 尚差'}</span>
+        <span class="fw7">${ok ? '' : gap + ' hr / 週'}</span>
+      </div>
+      ${note ? `<div class="hr" style="font-size:10px;color:var(--gray-500)">${note}</div>` : ''}
+    </div>`;
+  };
+
+  // 精神護理之家 < 200 beds: OT & PSY each need ceil(beds/20)*4 hr/wk
+  if (typeIdx === 2 && beds < 200) {
+    const req    = Math.ceil(beds / 20) * 4;
+    const otPlan = sumHrs(['ot']), psyPlan = sumHrs(['psy']);
+    panel.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin:10px 0 5px">
+        兼任時數法定需求（每 20 床週服務 ≥ 4 hr）
+      </div>
+      <div style="display:flex;gap:8px">
+        ${hbox('職能治療人員', req, otPlan)}
+        ${hbox('臨床心理師',   req, psyPlan)}
+      </div>`;
+    return;
+  }
+
+  // 住宿型 / 日間型, beds < 100: combined professional hours
+  if (typeIdx <= 1 && beds < 100) {
+    const req  = reqHours(beds, typeIdx);
+    let plan   = sumHrs(null);   // sum ALL non-ft non-offsetted
+    const label = typeIdx === 0
+      ? `兼任時數法定需求（每 10 人週服務 ≥ 4 hr）`
+      : `兼任時數法定需求（每 15 人週服務 ≥ 5 hr）`;
+    // add qualification offset for beds ≤ 49
+    let offsetNote = '';
+    if (beds <= 49) {
+      const dirQ = document.getElementById('dirQ')?.checked || false;
+      const manQ = document.getElementById('manQ')?.checked || false;
+      const off  = (dirQ ? 8 : 0) + (manQ ? 8 : 0);
+      if (off > 0) { plan += off; offsetNote = `（含資格抵任 ${off} hr / 週）`; }
+    }
+    panel.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin:10px 0 5px">${label}</div>
+      ${hbox('兼任專業人員合計', req, plan, offsetNote ? '目前配置' + offsetNote : '')}`;
+    return;
+  }
+
+  panel.innerHTML = '';
+}
 
 // ── recalc ────────────────────────────────────
 function recalc() {
@@ -692,7 +937,8 @@ function recalc() {
   const ocBeds = Math.round(beds * occ);
 
   const rent   = parseFloat(document.getElementById('c_rent').value)||0;
-  const util   = parseFloat(document.getElementById('c_util').value)||0;
+  const water  = parseFloat(document.getElementById('c_water').value)||0;
+  const elec   = parseFloat(document.getElementById('c_elec').value)||0;
   const foodPer= parseFloat(document.getElementById('c_food').value)||0;
   const supply = parseFloat(document.getElementById('c_supply').value)||0;
   const ins    = parseFloat(document.getElementById('c_ins').value)||0;
@@ -700,10 +946,11 @@ function recalc() {
   const other  = parseFloat(document.getElementById('c_other').value)||0;
 
   const food = foodPer * ocBeds;
-  const fac  = rent + util;
+  const util = (water + elec) * ocBeds;
+  const fac  = rent;
   let adm    = supply + ins + admin + other;
   document.querySelectorAll('#monthly_custom .cs-amt').forEach(el => { adm += parseFloat(el.value)||0; });
-  document.getElementById('otherSub').textContent = fmt(food + fac + adm);
+  document.getElementById('otherSub').textContent = fmt(food + util + fac + adm);
 
   // Setup costs
   const setupIds = ['s_reno','s_fire','s_fire2','s_arch','s_dep'];
@@ -725,7 +972,7 @@ function recalc() {
   const amEl = document.getElementById('b_amort');
   if (amEl) amEl.textContent = fmt(amortMonthly);
 
-  const total  = staffTotal + food + fac + adm + (inclAmort ? amortMonthly : 0);
+  const total  = staffTotal + food + util + fac + adm + (inclAmort ? amortMonthly : 0);
   const perBed = beds > 0 ? total/beds : 0;
   const be     = ocBeds > 0 ? total/ocBeds : 0;
 
@@ -736,9 +983,85 @@ function recalc() {
   document.getElementById('sm_be_note').textContent = `入住率 ${Math.round(occ*100)}% — ${ocBeds} 床/人`;
   document.getElementById('b_staff').textContent    = fmt(staffTotal);
   document.getElementById('b_food').textContent     = fmt(food);
+  document.getElementById('b_util').textContent     = fmt(util);
   document.getElementById('b_fac').textContent      = fmt(fac);
   document.getElementById('b_adm').textContent      = fmt(adm);
   document.getElementById('b_total').textContent    = fmt(total);
+
+  // ── Revenue & P&L ─────────────────────────────
+  const nhiPerBed  = parseFloat(document.getElementById('r_nhi')?.value)||0;
+  const selfPerBed = parseFloat(document.getElementById('r_self')?.value)||0;
+  const otherRev   = parseFloat(document.getElementById('r_other')?.value)||0;
+  const monthlyRev = (nhiPerBed+selfPerBed)*ocBeds + otherRev;
+  const monthlyPnl = monthlyRev - total;
+
+  const bRev = document.getElementById('b_rev');
+  if (bRev) bRev.textContent = fmt(monthlyRev);
+  const bPnl = document.getElementById('b_pnl');
+  if (bPnl) { bPnl.textContent = fmt(monthlyPnl); bPnl.className = monthlyPnl>0?'fw7 pnl-pos':monthlyPnl<0?'fw7 pnl-neg':'fw7'; }
+
+  const smRev = document.getElementById('sm_rev');
+  if (smRev) smRev.textContent = fmt(monthlyRev);
+  const smPnl = document.getElementById('sm_pnl');
+  if (smPnl) { smPnl.textContent = fmt(monthlyPnl); smPnl.className = 'sv '+(monthlyPnl>0?'g':monthlyPnl<0?'r':''); }
+  const smPnlYr = document.getElementById('sm_pnl_yr');
+  if (smPnlYr) { smPnlYr.textContent = fmt(monthlyPnl*12); smPnlYr.className = 'sv '+(monthlyPnl>0?'g':monthlyPnl<0?'r':''); }
+
+  let pbTxt = '—';
+  if (setupTotal>0 && monthlyPnl>0) {
+    const m = Math.ceil(setupTotal/monthlyPnl);
+    pbTxt = m<12 ? m+'個月' : Math.floor(m/12)+'年'+(m%12 ? (m%12)+'月':'');
+  } else if (monthlyPnl<=0 && (nhiPerBed+selfPerBed)>0) pbTxt='虧損中';
+  const smPb = document.getElementById('sm_payback');
+  if (smPb) smPb.textContent = pbTxt;
+
+  // ── Pie chart ─────────────────────────────────
+  const fixedMonthly = staffTotal + fac + adm + (inclAmort?amortMonthly:0);
+  const varPer = foodPer + water + elec;
+  const pieSlices = [
+    {label:'人力成本', v:staffTotal, color:'#2563eb'},
+    {label:'餐費',     v:food,       color:'#16a34a'},
+    {label:'水電費',   v:util,       color:'#0891b2'},
+    {label:'房屋租金', v:fac,        color:'#7c3aed'},
+    {label:'耗材保險行政', v:adm,    color:'#d97706'},
+  ];
+  if (inclAmort && amortMonthly>0) pieSlices.push({label:'前期攤提', v:amortMonthly, color:'#0f766e'});
+  renderPieChart(pieSlices);
+
+  // ── Scenario table ────────────────────────────
+  renderScenarioTable({fixedMonthly, varPer, nhiPerBed, selfPerBed, otherRev, beds, currentOcc:occ});
+
+  // ── Cash flow ─────────────────────────────────
+  const r1end = parseInt(document.getElementById('cf_r1end')?.value)||3;
+  const r1occ = (parseInt(document.getElementById('cf_r1occ')?.value)||40)/100;
+  const r2end = parseInt(document.getElementById('cf_r2end')?.value)||6;
+  const r2occ = (parseInt(document.getElementById('cf_r2occ')?.value)||65)/100;
+  const cfInit       = parseInt(document.getElementById('cf_init')?.value)||0;
+  const cfDelta      = parseInt(document.getElementById('cf_delta')?.value)||3;
+  const cfMinReserve = parseFloat(document.getElementById('cf_minReserve')?.value)||0;
+  renderCashFlow({setupTotal, fixedMonthly, varPer, beds, nhiPerBed, selfPerBed, otherRev,
+    ramp:{r1end, r1occ, r2end, r2occ, target:occ},
+    linear:{init:cfInit, delta:cfDelta},
+    minReserve: cfMinReserve});
+  updatePtHoursPanel();
+  scheduleAutoSave();
+}
+
+// ── Auto-save (debounced) ──────────────────────
+let _autoSaveTimer=null;
+function scheduleAutoSave(){
+  if(!currentProfileId) return;
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer=setTimeout(()=>{
+    const profiles=getProfiles();
+    const idx=profiles.findIndex(p=>p.id===currentProfileId);
+    if(idx>=0){
+      profiles[idx].state=collectState();
+      setProfiles(profiles);
+      const badge=document.getElementById('autoSaveBadge');
+      if(badge){ badge.style.display='block'; clearTimeout(badge._t); badge._t=setTimeout(()=>badge.style.display='none',2000); }
+    }
+  },1500);
 }
 
 // ── calc ──────────────────────────────────────
@@ -773,7 +1096,7 @@ function calc(syncBeds = true) {
     const notes = [
       '24 小時均應有機構內相關人員上班。兼任專業人員每 10 人應有每週至少 4 小時服務時數。',
       '兼任專業人員每 15 人應有每週至少 5 小時服務時數。',
-      '護理人員＋照顧服務員任何時段總數：住民比不得低於 1:20。夜間照顧人力得計入輔助人員（駐衛警、保全、行政等）。',
+      '護理人員＋照顧服務員任何時段總數：住民比不得低於 1:20。夜間照顧人力得計入輔助人員（駐衛警、保全、行政等）。<br>兼任特約人員（精神科醫師、物理治療師、營養師、家醫科醫師）4 類中須設置 2 類；表格預設全列，請依實際選用類別將不適用者人數調為 0。',
     ];
     let extra = '';
     if (typeIdx <= 1 && v > 0 && v <= 49) {
@@ -782,6 +1105,7 @@ function calc(syncBeds = true) {
     }
     const el = document.getElementById('staffNote');
     el.innerHTML = notes[typeIdx] + (extra ? '<br>' + extra : '');
+    document.getElementById('nhRegPanel').style.display = typeIdx === 2 ? '' : 'none';
   }
 
   recalc();
@@ -891,7 +1215,7 @@ function collectState() {
   return {
     typeIdx, area:get('area'), planBeds:get('planBeds'), occ:get('occ'),
     dirQ:get('dirQ'), manQ:get('manQ'), burden:get('burden'),
-    c_rent:get('c_rent'), c_util:get('c_util'), c_food:get('c_food'),
+    c_rent:get('c_rent'), c_water:get('c_water'), c_elec:get('c_elec'), c_food:get('c_food'),
     c_supply:get('c_supply'), c_ins:get('c_ins'),
     c_admin:get('c_admin'), c_other:get('c_other'),
     s_reno:get('s_reno'), s_ac:get('s_ac'), s_nurseq:get('s_nurseq'),
@@ -899,6 +1223,10 @@ function collectState() {
     s_fire:get('s_fire'), s_fire2:get('s_fire2'), s_arch:get('s_arch'),
     s_design:get('s_design'), s_lic:get('s_lic'), s_dep:get('s_dep'), s_other2:get('s_other2'),
     amortYears:get('amortYears'), inclAmort:get('inclAmort'),
+    r_nhi:get('r_nhi'), r_self:get('r_self'), r_other:get('r_other'),
+    cf_r1end:get('cf_r1end'), cf_r1occ:get('cf_r1occ'), cf_r2end:get('cf_r2end'), cf_r2occ:get('cf_r2occ'),
+    cf_mode: getCfMode(), cf_init:get('cf_init'), cf_delta:get('cf_delta'),
+    cf_minReserve:get('cf_minReserve'),
     staffData,
     customSetup: [...document.querySelectorAll('#setup_custom .csr')].map(row => ({
       name:  row.querySelector('.cs-name').value,
@@ -918,7 +1246,7 @@ function applyState(state) {
   [0,1,2].forEach(j => document.getElementById('tab'+j).classList.toggle('on', j===typeIdx));
   set('area',state.area||0); set('planBeds',state.planBeds||1); set('occ',state.occ||85);
   set('dirQ',state.dirQ||false); set('manQ',state.manQ||false); set('burden',state.burden||18);
-  set('c_rent',state.c_rent||0); set('c_util',state.c_util||0); set('c_food',state.c_food||0);
+  set('c_rent',state.c_rent||0); set('c_water',state.c_water!=null?state.c_water:1000); set('c_elec',state.c_elec!=null?state.c_elec:2750); set('c_food',state.c_food||0);
   set('c_supply',state.c_supply||0); set('c_ins',state.c_ins||0);
   set('c_admin',state.c_admin||0); set('c_other',state.c_other||0);
   set('s_reno',state.s_reno||0); set('s_ac',state.s_ac||0); set('s_nurseq',state.s_nurseq||0);
@@ -926,12 +1254,17 @@ function applyState(state) {
   set('s_fire',state.s_fire||0); set('s_fire2',state.s_fire2||0); set('s_arch',state.s_arch||0);
   set('s_design',state.s_design||0); set('s_lic',state.s_lic||0); set('s_dep',state.s_dep||0);
   set('s_other2',state.s_other2||0); set('amortYears',state.amortYears||5); set('inclAmort',state.inclAmort||false);
+  set('r_nhi',state.r_nhi!=null?state.r_nhi:16000); set('r_self',state.r_self!=null?state.r_self:5000); set('r_other',state.r_other||0);
+  set('cf_r1end',state.cf_r1end||3); set('cf_r1occ',state.cf_r1occ||40); set('cf_r2end',state.cf_r2end||6); set('cf_r2occ',state.cf_r2occ||65);
+  set('cf_init',state.cf_init||0); set('cf_delta',state.cf_delta||3);
+  set('cf_minReserve',state.cf_minReserve!=null?state.cf_minReserve:300000);
+  if(state.cf_mode){ const r=document.querySelector(`input[name="cf_mode"][value="${state.cf_mode}"]`); if(r){r.checked=true; setCfMode();} }
   document.getElementById('setup_custom').innerHTML='';
   document.getElementById('monthly_custom').innerHTML='';
   csrCounter=0;
   (state.customSetup||[]).forEach(item=>addSetupItem(item.name,item.price||0,item.qty||1,true));
   (state.customMonthly||[]).forEach(item=>addMonthlyItem(item.name,item.amount,true));
-  calc();
+  calc(false);  // false = respect planBeds from state, don't reset to maxBeds
   if (state.staffData) {
     state.staffData.forEach((sd,i) => {
       const ce=document.getElementById('cnt_'+i);
@@ -941,8 +1274,8 @@ function applyState(state) {
         if(se&&!se.disabled)se.value=sd.sal;
       } else {
         const hre=document.getElementById('hr_'+i), hrse=document.getElementById('hrs_'+i);
-        if(hre&&!hre.disabled)hre.value=sd.hr||190;
-        if(hrse&&!hrse.disabled)hrse.value=sd.hrs||8;
+        if(hre&&!hre.disabled)hre.value=sd.hr||(currentStaff[i]?.defaultHr||190);
+        if(hrse&&!hrse.disabled)hrse.value=sd.hrs||(currentStaff[i]?.defaultHrs||8);
       }
     });
   }
@@ -964,14 +1297,15 @@ function computeSummary(state) {
     if (s.ft) {
       monthlySal = sd?.sal ?? SAL[s.key].ft;
     } else {
-      const hr  = sd?.hr  ?? 190;
-      const hrs = sd?.hrs ?? 8;
+      const hr  = sd?.hr  ?? (s.defaultHr  ?? 190);
+      const hrs = sd?.hrs ?? (s.defaultHrs ?? 8);
       monthlySal = hr * hrs * 4.33;
     }
     staffTotal += cnt * monthlySal * burden;
   });
   const food = (state.c_food||0)*ocBeds;
-  const fac  = (state.c_rent||0)+(state.c_util||0);
+  const util = ((state.c_water!=null?state.c_water:1000)+(state.c_elec!=null?state.c_elec:2750))*ocBeds;
+  const fac  = (state.c_rent||0);
   const customMonthlyTotal = (state.customMonthly||[]).reduce((sum,item)=>sum+(item.amount||0),0);
   const adm  = (state.c_supply||0)+(state.c_ins||0)+(state.c_admin||0)+(state.c_other||0)+customMonthlyTotal;
   const setupIds = ['s_reno','s_fire','s_fire2','s_arch','s_dep'];
@@ -979,10 +1313,15 @@ function computeSummary(state) {
   const setupTotal   = setupIds.reduce((sum,k)=>sum+(state[k]||0),0) + customTotal;
   const amortMonthly = setupTotal/Math.max(1,(state.amortYears||5))/12;
   const amort = state.inclAmort ? amortMonthly : 0;
-  const total = staffTotal+food+fac+adm+amort;
+  const total = staffTotal+food+util+fac+adm+amort;
   const perBed = beds>0?total/beds:0;
   const be     = ocBeds>0?total/ocBeds:0;
-  return { staffTotal, food, fac, adm, amort, total, perBed, be, ocBeds, setupTotal, amortMonthly };
+  const nhiPerBed  = state.r_nhi!=null ? state.r_nhi : 16000;
+  const selfPerBed = state.r_self!=null ? state.r_self : 5000;
+  const otherRev   = state.r_other || 0;
+  const monthlyRev = (nhiPerBed+selfPerBed)*ocBeds + otherRev;
+  const monthlyPnl = monthlyRev - total;
+  return { staffTotal, food, util, fac, adm, amort, total, perBed, be, ocBeds, setupTotal, amortMonthly, monthlyRev, monthlyPnl };
 }
 
 function saveProfile() {
@@ -1001,6 +1340,19 @@ function saveProfile() {
   setProfiles(profiles);
   renderProfileSelect();
   showToast('已儲存：'+name);
+}
+
+function saveAndDownload() {
+  saveProfile();
+  const profiles = getProfiles();
+  if (!profiles.length) return;
+  const blob = new Blob([JSON.stringify(profiles, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'rehab_profiles_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function saveAsProfile() {
@@ -1080,7 +1432,8 @@ function renderCompare() {
   <tr class="shd"><td colspan="4">月度成本明細</td></tr>
   ${cmpRow('人力成本（含勞健保）', sA.staffTotal, sB.staffTotal)}
   ${cmpRow('餐費（依入住率）', sA.food, sB.food)}
-  ${cmpRow('房租＋水電＋設備折舊', sA.fac, sB.fac)}
+  ${cmpRow('水電費（依入住率）', sA.util, sB.util)}
+  ${cmpRow('房屋租金', sA.fac, sB.fac)}
   ${cmpRow('耗材＋保險＋行政＋其他', sA.adm, sB.adm)}
   ${showAmort?cmpRow('前期建置攤提', sA.amort, sB.amort):''}
   <tr class="tot"><td>月總成本</td><td class="cmp-num">${fmt(Math.round(sA.total))}</td><td class="cmp-num">${fmt(Math.round(sB.total))}</td>
@@ -1088,6 +1441,10 @@ function renderCompare() {
   <tr class="shd"><td colspan="4">效益指標</td></tr>
   ${cmpRow('每床月成本', sA.perBed, sB.perBed)}
   ${cmpRow('損益平衡每床收費', sA.be, sB.be)}
+  <tr class="shd"><td colspan="4">損益分析</td></tr>
+  ${cmpRow('月收入', sA.monthlyRev, sB.monthlyRev, false)}
+  ${cmpRow('月盈虧', sA.monthlyPnl, sB.monthlyPnl, false)}
+  ${cmpRow('年盈虧', sA.monthlyPnl*12, sB.monthlyPnl*12, false)}
   </tbody></table>`;
 
   // Optimization hints
@@ -1144,14 +1501,32 @@ function importProfiles(e) {
     try {
       const data = JSON.parse(ev.target.result);
       if (!Array.isArray(data) || !data.every(p=>p.id&&p.name&&p.state)) throw new Error();
-      const existing   = getProfiles();
+      const existing    = getProfiles();
       const existingIds = new Set(existing.map(p=>p.id));
-      const toAdd = data.filter(p=>!existingIds.has(p.id));
-      const dup   = data.length - toAdd.length;
-      if (!confirm(`匯入 ${data.length} 個設定檔${dup?'（'+dup+' 個 ID 重複略過）':''}，確定繼續？`)) return;
-      setProfiles([...existing, ...toAdd]);
+      const toAdd    = data.filter(p=>!existingIds.has(p.id));
+      const toUpdate = data.filter(p=> existingIds.has(p.id));
+      const msg = [
+        `共 ${data.length} 個設定檔`,
+        toAdd.length    ? `新增 ${toAdd.length} 個`    : '',
+        toUpdate.length ? `覆蓋更新 ${toUpdate.length} 個` : '',
+      ].filter(Boolean).join('，') + '，確定繼續？';
+      if (!confirm(msg)) return;
+      // overwrite duplicates + append new
+      const merged = existing.map(p => {
+        const u = toUpdate.find(x=>x.id===p.id);
+        return u ? {...p, name:u.name, state:u.state, updatedAt:Date.now()} : p;
+      });
+      setProfiles([...merged, ...toAdd]);
       renderProfileSelect();
-      showToast('已匯入 ' + toAdd.length + ' 個設定檔' + (dup?' / '+dup+' 個略過':''));
+      // auto-load first profile from imported file
+      const first = data[0];
+      if (first) {
+        currentProfileId = first.id;
+        document.getElementById('pb_name').value  = first.name;
+        document.getElementById('pb_select').value = first.id;
+        applyState(first.state);
+      }
+      showToast(`已匯入 ${data.length} 個設定檔 · 已載入「${first?.name||''}」`);
     } catch { showToast('檔案格式錯誤，請選擇正確的匯出檔'); }
     e.target.value = '';
   };
@@ -1164,6 +1539,191 @@ function showToast(msg) {
   clearTimeout(t._timer);
   t._timer=setTimeout(()=>t.classList.remove('show'),2500);
 }
+
+// ── Pie chart ─────────────────────────────────
+function renderPieChart(slices) {
+  const canvas = document.getElementById('pieChart');
+  const legend = document.getElementById('pieLegend');
+  if (!canvas || !legend) return;
+  const total = slices.reduce((s,c)=>s+c.v,0);
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if (total<=0) { legend.innerHTML=''; return; }
+  const cx=canvas.width/2, cy=canvas.height/2, r=Math.min(cx,cy)-8;
+  let angle=-Math.PI/2;
+  slices.forEach(s=>{
+    const sweep=(s.v/total)*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,angle,angle+sweep); ctx.closePath();
+    ctx.fillStyle=s.color; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+    angle+=sweep;
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,r*.42,0,Math.PI*2);
+  ctx.fillStyle='#fff'; ctx.fill();
+  legend.innerHTML=slices.map(s=>{
+    const pct=Math.round(s.v/total*100);
+    return `<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px">
+      <div style="width:10px;height:10px;border-radius:2px;background:${s.color};flex-shrink:0"></div>
+      <span style="flex:1;color:var(--gray-700)">${s.label}</span>
+      <span style="font-weight:700">${pct}%</span>
+      <span style="color:var(--gray-500);font-size:11px;min-width:72px;text-align:right">${fmt(s.v)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Scenario table ─────────────────────────────
+function renderScenarioTable({fixedMonthly, varPer, nhiPerBed, selfPerBed, otherRev, beds, currentOcc}) {
+  const el = document.getElementById('scenarioTable');
+  if (!el) return;
+  if (beds<=0) { el.innerHTML='<p class="tg fs12" style="padding:8px">請先設定床數</p>'; return; }
+  const rates=[.60,.65,.70,.75,.80,.85,.90,.95,1.00];
+  let html=`<table class="scen-tbl"><thead><tr><th>入住率</th><th>在住</th><th>月收入</th><th>月成本</th><th>月盈虧</th><th>年盈虧</th></tr></thead><tbody>`;
+  rates.forEach(rate=>{
+    const ocBeds=Math.round(beds*rate);
+    const rev=(nhiPerBed+selfPerBed)*ocBeds+otherRev;
+    const cost=fixedMonthly+varPer*ocBeds;
+    const pnl=rev-cost;
+    const isCur=Math.abs(rate-currentOcc)<.026;
+    const pc=pnl>0?'pnl-pos':pnl<0?'pnl-neg':'';
+    html+=`<tr${isCur?' class="scen-cur"':''}>
+      <td>${Math.round(rate*100)}%</td><td>${ocBeds}</td>
+      <td>${fmt(rev)}</td><td>${fmt(cost)}</td>
+      <td class="${pc}">${fmt(pnl)}</td><td class="${pc}">${fmt(pnl*12)}</td>
+    </tr>`;
+  });
+  el.innerHTML=html+'</tbody></table>';
+}
+
+// ── Cash flow ──────────────────────────────────
+let _cfRows=[], _cfSetup=0, _cfMinReserve=0;
+
+function getCfMode(){
+  return document.querySelector('input[name="cf_mode"]:checked')?.value || 'ramp';
+}
+function setCfMode(){
+  const isLinear = getCfMode()==='linear';
+  document.getElementById('cf_ramp_panel').style.display  = isLinear?'none':'flex';
+  document.getElementById('cf_linear_panel').style.display = isLinear?'flex':'none';
+  recalc();
+}
+
+function renderCashFlow({setupTotal, fixedMonthly, varPer, beds, nhiPerBed, selfPerBed, otherRev, ramp, linear, minReserve=0}) {
+  const el=document.getElementById('cashFlowTable');
+  if (!el) return;
+  if (beds < 1) { el.innerHTML=''; return; }
+  const isLinear = getCfMode()==='linear';
+  let cum=-setupTotal; _cfSetup=setupTotal;
+  _cfRows=[{m:0,cum:-setupTotal}]; _cfMinReserve=minReserve;
+  const targetOcBeds = isLinear ? beds : Math.round(beds * ramp.target);
+  const STABLE_EXTRA = 2, MAX_MONTHS = 60;
+  let reachedAt = null;
+  let html=`<table class="scen-tbl"><thead><tr><th>月份</th><th>在住人數</th><th>入住率</th><th>月收入</th><th>月成本</th><th>月盈虧</th><th>累計現金流</th></tr></thead><tbody>`;
+  for(let m=1;m<=MAX_MONTHS;m++){
+    let ocBeds;
+    if(isLinear){
+      ocBeds=Math.min(linear.init + m*linear.delta, beds);
+      ocBeds=Math.max(0, Math.round(ocBeds));
+    } else {
+      const {r1end,r1occ,r2end,r2occ,target}=ramp;
+      const rate=m<=r1end?r1occ:m<=r2end?r2occ:target;
+      ocBeds=Math.round(beds*rate);
+    }
+    if (reachedAt===null && ocBeds>=targetOcBeds) reachedAt=m;
+    const rate2=beds>0?ocBeds/beds:0;
+    const rev=(nhiPerBed+selfPerBed)*ocBeds+otherRev;
+    const cost=fixedMonthly+varPer*ocBeds;
+    const pnl=rev-cost;
+    cum+=pnl;
+    _cfRows.push({m,cum});
+    const pc=pnl>0?'pnl-pos':pnl<0?'pnl-neg':'';
+    const cc=cum>0?'pnl-pos':cum<0?'pnl-neg':'';
+    const belowReserve = minReserve>0 && cum < -minReserve;
+    const stableStyle = (reachedAt!==null && m>reachedAt) ? 'background:#f9fafb;color:var(--gray-500)' : '';
+    const rowStyle = belowReserve ? 'background:#fff1f2' : stableStyle;
+    html+=`<tr style="${rowStyle}"><td>M${m}${belowReserve?'  ⚠':''}  </td><td style="text-align:center;font-weight:700">${ocBeds}</td><td>${Math.round(rate2*100)}%</td>
+      <td>${fmt(rev)}</td><td>${fmt(cost)}</td>
+      <td class="${pc}">${fmt(pnl)}</td><td class="${cc} fw7">${fmt(cum)}</td></tr>`;
+    if (m===reachedAt) html+=`<tr><td colspan="7" style="text-align:center;font-size:10px;padding:3px 0;background:#f0fdf4;color:var(--green);font-weight:600">✓ 達到收案上限（${ocBeds} 人 / ${Math.round(rate2*100)}%）— 以下為穩定期</td></tr>`;
+    if (reachedAt!==null && m>=reachedAt+STABLE_EXTRA) break;
+  }
+  el.innerHTML=html+'</tbody></table>';
+  renderCfChart(_cfRows);
+}
+
+function renderCfChart(rows) {
+  const canvas=document.getElementById('cfChart');
+  if (!canvas) return;
+  const W=canvas.parentElement.offsetWidth||600;
+  canvas.width=W;
+  const H=canvas.height||160;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const pad={t:16,r:16,b:28,l:72};
+  const cW=W-pad.l-pad.r, cH=H-pad.t-pad.b;
+  const vals=rows.map(r=>r.cum);
+  const minV=Math.min(...vals), maxV=Math.max(...vals);
+  const rng=maxV-minV||1;
+  const xS=i=>pad.l+(i/(rows.length-1))*cW;
+  const yS=v=>pad.t+(1-(v-minV)/rng)*cH;
+  // grid
+  ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=1;
+  [0,.25,.5,.75,1].forEach(t=>{
+    const y=pad.t+t*cH, v=maxV-t*rng;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+    ctx.fillStyle='#9ca3af'; ctx.font='10px system-ui'; ctx.textAlign='right';
+    ctx.fillText(fmtK(v),pad.l-4,y+3);
+  });
+  // zero line
+  if (minV<0&&maxV>0){
+    const y0=yS(0);
+    ctx.save(); ctx.strokeStyle='#6b7280'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(pad.l,y0); ctx.lineTo(W-pad.r,y0); ctx.stroke();
+    ctx.restore();
+  }
+  // min-reserve warning line
+  if (_cfMinReserve>0){
+    const resV=-_cfMinReserve;
+    if(resV>=minV && resV<=maxV){
+      const yr=yS(resV);
+      ctx.save(); ctx.strokeStyle='#ef4444'; ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
+      ctx.beginPath(); ctx.moveTo(pad.l,yr); ctx.lineTo(W-pad.r,yr); ctx.stroke();
+      ctx.restore();
+      ctx.fillStyle='#ef4444'; ctx.font='bold 10px system-ui'; ctx.textAlign='left';
+      ctx.fillText('最低保留 '+fmtK(-_cfMinReserve), pad.l+4, yr-4);
+    }
+  }
+  // area
+  const y0c=yS(Math.max(minV,Math.min(maxV,0)));
+  ctx.beginPath();
+  ctx.moveTo(xS(0),y0c);
+  rows.forEach((r,i)=>ctx.lineTo(xS(i),yS(r.cum)));
+  ctx.lineTo(xS(rows.length-1),y0c);
+  ctx.closePath(); ctx.fillStyle='rgba(37,99,235,.08)'; ctx.fill();
+  // line
+  ctx.beginPath();
+  rows.forEach((r,i)=>i===0?ctx.moveTo(xS(i),yS(r.cum)):ctx.lineTo(xS(i),yS(r.cum)));
+  ctx.strokeStyle='#2563eb'; ctx.lineWidth=2.5; ctx.stroke();
+  // dots
+  rows.forEach((r,i)=>{
+    ctx.beginPath(); ctx.arc(xS(i),yS(r.cum),3.5,0,Math.PI*2);
+    ctx.fillStyle=r.cum>=0?'#16a34a':'#dc2626'; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+  });
+  // x labels — thin out when many months
+  ctx.fillStyle='#6b7280'; ctx.font='10px system-ui'; ctx.textAlign='center';
+  const n=rows.length-1, step=n<=14?1:n<=24?2:n<=36?3:6;
+  rows.forEach((r,i)=>{ if(i%step===0||i===n) ctx.fillText(r.m===0?'開始':'M'+r.m,xS(i),H-pad.b+12); });
+}
+
+function fmtK(n){
+  const abs=Math.abs(Math.round(n)), s=n<0?'-':'';
+  if(abs>=1000000) return s+(abs/1000000).toFixed(1)+'M';
+  if(abs>=10000)   return s+Math.round(abs/1000)+'K';
+  return s+abs.toLocaleString('zh-TW');
+}
+
+window.addEventListener('resize',()=>{ if(_cfRows.length) renderCfChart(_cfRows); });
 
 calc();
 renderProfileSelect();

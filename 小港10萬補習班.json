@@ -1,0 +1,147 @@
+[
+  {
+    "id": "moz309vekbga",
+    "name": "小港10萬補習班",
+    "state": {
+      "typeIdx": 0,
+      "area": 497.95,
+      "planBeds": 48,
+      "occ": 85,
+      "dirQ": true,
+      "manQ": false,
+      "burden": 18,
+      "c_rent": 100000,
+      "c_util": 30000,
+      "c_food": 2000,
+      "c_supply": 0,
+      "c_ins": 0,
+      "c_admin": 5000,
+      "c_other": 0,
+      "s_reno": 1500000,
+      "s_ac": 0,
+      "s_nurseq": 0,
+      "s_kitchen": 0,
+      "s_it": 0,
+      "s_hw_other": 0,
+      "s_fire": 100000,
+      "s_fire2": 30000,
+      "s_arch": 400000,
+      "s_design": 0,
+      "s_lic": 0,
+      "s_dep": 200000,
+      "s_other2": 0,
+      "amortYears": 5,
+      "inclAmort": true,
+      "r_nhi": 16000,
+      "r_self": 5000,
+      "r_other": 0,
+      "cf_r1end": 3,
+      "cf_r1occ": 40,
+      "cf_r2end": 6,
+      "cf_r2occ": 65,
+      "cf_mode": "ramp",
+      "cf_init": 0,
+      "cf_delta": 3,
+      "staffData": [
+        {
+          "cnt": 1,
+          "sal": 60000
+        },
+        {
+          "cnt": 6,
+          "sal": 35000
+        },
+        {
+          "cnt": 1,
+          "hr": 190,
+          "hrs": 12
+        },
+        {
+          "cnt": 0,
+          "hr": 190,
+          "hrs": 8
+        }
+      ],
+      "customSetup": [],
+      "customMonthly": []
+    },
+    "updatedAt": 1778380530669
+  },
+  {
+    "id": "moz4lqw2xdbd",
+    "name": "小港10萬補習班-精護",
+    "state": {
+      "typeIdx": 2,
+      "area": 497.95,
+      "planBeds": 24,
+      "occ": 85,
+      "dirQ": false,
+      "manQ": false,
+      "burden": 18,
+      "c_rent": 50000,
+      "c_util": 15000,
+      "c_food": 6000,
+      "c_supply": 10000,
+      "c_ins": 5000,
+      "c_admin": 5000,
+      "c_other": 5000,
+      "s_reno": 500000,
+      "s_ac": 0,
+      "s_nurseq": 0,
+      "s_kitchen": 0,
+      "s_it": 0,
+      "s_hw_other": 0,
+      "s_fire": 150000,
+      "s_fire2": 30000,
+      "s_arch": 100000,
+      "s_design": 0,
+      "s_lic": 0,
+      "s_dep": 100000,
+      "s_other2": 0,
+      "amortYears": 5,
+      "inclAmort": false,
+      "r_nhi": 16000,
+      "r_self": 5000,
+      "r_other": 0,
+      "cf_r1end": 3,
+      "cf_r1occ": 40,
+      "cf_r2end": 6,
+      "cf_r2occ": 65,
+      "cf_mode": "ramp",
+      "cf_init": 0,
+      "cf_delta": 3,
+      "staffData": [
+        {
+          "cnt": 1,
+          "sal": 50000
+        },
+        {
+          "cnt": 2,
+          "sal": 45000
+        },
+        {
+          "cnt": 3,
+          "sal": 30000
+        },
+        {
+          "cnt": 1,
+          "hr": 190,
+          "hrs": 8
+        },
+        {
+          "cnt": 1,
+          "hr": 190,
+          "hrs": 8
+        },
+        {
+          "cnt": 1,
+          "hr": 190,
+          "hrs": 8
+        }
+      ],
+      "customSetup": [],
+      "customMonthly": []
+    },
+    "updatedAt": 1778378435426
+  }
+]
