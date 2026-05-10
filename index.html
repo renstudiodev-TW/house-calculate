@@ -597,9 +597,9 @@ input[type=range]{flex:1;accent-color:var(--blue)}
 
 <!-- Cash flow card -->
 <div class="card">
-  <div class="ch gd">12 個月現金流預測</div>
+  <div class="ch gd">現金流預測（爬坡至目標入住率）</div>
   <div class="cb">
-    <div class="info" style="margin-bottom:10px">以前期建置成本為第 0 月起始，依入住率爬坡累積月盈虧。</div>
+    <div class="info" style="margin-bottom:10px">以前期建置成本為第 0 月起始，依入住率爬坡累積月盈虧。穩定期月盈虧與上方「損益分析」一致。</div>
     <div class="ramp-bar" style="margin-bottom:10px">
       <span style="font-weight:600">最低保留現金（警戒線）：</span>
       <input type="number" id="cf_minReserve" value="300000" min="0" oninput="recalc()" style="width:110px">
@@ -1637,14 +1637,14 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, beds, nhiPerBed, self
   const isLinear = getCfMode()==='linear';
   let cum=-setupTotal; _cfSetup=setupTotal;
   _cfRows=[{m:0,cum:-setupTotal}]; _cfMinReserve=minReserve;
-  const targetOcBeds = isLinear ? beds : Math.round(beds * ramp.target);
+  const targetOcBeds = Math.round(beds * ramp.target);
   const STABLE_EXTRA = 2, MAX_MONTHS = 60;
   let reachedAt = null;
   let html=`<table class="scen-tbl"><thead><tr><th>月份</th><th>在住人數</th><th>入住率</th><th>月收入</th><th>月成本</th><th>月盈虧</th><th>累計現金流</th></tr></thead><tbody>`;
   for(let m=1;m<=MAX_MONTHS;m++){
     let ocBeds;
     if(isLinear){
-      ocBeds=Math.min(linear.init + m*linear.delta, beds);
+      ocBeds=Math.min(linear.init + (m-1)*linear.delta, beds);
       ocBeds=Math.max(0, Math.round(ocBeds));
     } else {
       const {r1end,r1occ,r2end,r2occ,target}=ramp;
