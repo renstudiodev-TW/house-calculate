@@ -1060,7 +1060,7 @@ function recalc() {
   const cfInit       = parseInt(document.getElementById('cf_init')?.value)||0;
   const cfDelta      = parseInt(document.getElementById('cf_delta')?.value)||3;
   const cfMinReserve = parseFloat(document.getElementById('cf_minReserve')?.value)||0;
-  renderCashFlow({setupTotal, fixedMonthly, varPer, beds, nhiPerBed, selfPerBed, otherRev,
+  renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal, beds, nhiPerBed, selfPerBed, otherRev,
     ramp:{r1end, r1occ, r2end, r2occ, target:occ},
     linear:{init:cfInit, delta:cfDelta},
     minReserve: cfMinReserve});
@@ -1632,7 +1632,7 @@ function setCfMode(){
   recalc();
 }
 
-function renderCashFlow({setupTotal, fixedMonthly, varPer, beds, nhiPerBed, selfPerBed, otherRev, ramp, linear, minReserve=0}) {
+function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, nhiPerBed, selfPerBed, otherRev, ramp, linear, minReserve=0}) {
   const el=document.getElementById('cashFlowTable');
   if (!el) return;
   if (beds < 1) { el.innerHTML=''; return; }
@@ -1677,32 +1677,101 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, beds, nhiPerBed, self
   // ── Fund summary ───────────────────────────────
   const fsel = document.getElementById('cfFundSummary');
   if (!fsel) return;
-  const minCum = Math.min(..._cfRows.map(r => r.cum));
-  const minRow = _cfRows.reduce((a,b) => b.cum < a.cum ? b : a);
-  const operatingGap = Math.max(0, -minCum - setupTotal);
-  const suggested = Math.abs(minCum) + minReserve;
-  const mLabel = minRow.m === 0 ? '開業前' : `M${minRow.m}`;
-  const reserveNote = minReserve === 0
-    ? '<span style="color:#d97706;font-size:10px">（尚未設定警戒線，建議至少設定 2〜3 個月固定成本）</span>'
-    : '';
-  fsel.innerHTML = `
-    <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;border-radius:8px;padding:14px 16px;margin-top:16px">
-      <div style="font-size:13px;font-weight:700;color:#15803d;margin-bottom:10px">💰 建議籌備資金總額</div>
-      <div style="display:grid;grid-template-columns:1fr auto;gap:6px 16px;align-items:baseline">
-        <span style="font-size:12px;color:#374151">① 前期建置成本</span>
-        <span style="font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums">${fmt(setupTotal)}</span>
-        <span style="font-size:12px;color:#374151">② 爬坡期最大累計虧損<span style="font-size:10px;color:#9ca3af;margin-left:5px">現金流最低點 ${mLabel}</span></span>
-        <span style="font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums">${fmt(operatingGap)}</span>
-        <span style="font-size:12px;color:#374151">③ 最低保留現金緩衝 ${reserveNote}</span>
-        <span style="font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums">${fmt(minReserve)}</span>
-        <div style="grid-column:1/-1;border-top:1px solid #86efac;margin:4px 0"></div>
-        <span style="font-size:14px;font-weight:700;color:#15803d">建議籌備資金總額</span>
-        <span style="font-size:22px;font-weight:800;color:#15803d;text-align:right;font-variant-numeric:tabular-nums;letter-spacing:-.5px">${fmt(suggested)}</span>
-      </div>
-      <div style="font-size:10px;color:#6b7280;margin-top:8px;line-height:1.7">
-        ＝ ① 前期建置成本（設施裝修、設備購置） ＋ ② 爬坡期間累計現金缺口（${mLabel} 為最低點，超出建置成本之運營虧損） ＋ ③ 最低保留現金緩衝
-      </div>
-    </div>`;
+
+  const minCum        = Math.min(..._cfRows.map(r => r.cum));
+  const minRow        = _cfRows.reduce((a,b) => b.cum < a.cum ? b : a);
+  const operatingGap  = Math.max(0, -minCum - setupTotal);
+  const suggested     = Math.abs(minCum) + minReserve;
+  const startCap      = suggested;
+  const otherFixed    = fixedMonthly - staffTotal;
+  const stablePnl     = (nhiPerBed+selfPerBed)*targetOcBeds + otherRev - fixedMonthly - varPer*targetOcBeds;
+  const beRow         = _cfRows.find(r => r.m > 0 && r.cum >= 0);
+  const mLow          = minRow.m === 0 ? '開業前' : `M${minRow.m}`;
+  const mStable       = reachedAt ? `M${reachedAt}` : '（60個月內未達標）';
+  const mBe           = beRow ? `M${beRow.m}` : '60個月內未回正';
+
+  // Key cash milestones
+  const ms = [];
+  ms.push({ t:'籌備完成（開業前）',  d:'前期建置支出後，正式向主管機關申請設立許可', v: startCap - setupTotal });
+  if (_cfRows[1]) {
+    const m1beds = isLinear ? Math.min(linear.init, beds) : Math.round(beds * ramp.r1occ);
+    ms.push({ t:'M1 開業首月', d:`初始入住 ${m1beds} 人`, v: startCap + _cfRows[1].cum });
+  }
+  if (minRow.m > 1) ms.push({ t:`${mLow} 現金最低點`, d:'爬坡期帳戶資金最低處', v: startCap + minCum, warn:true });
+  if (reachedAt) {
+    const rr = _cfRows.find(r => r.m === reachedAt);
+    if (rr) ms.push({ t:`${mStable} 達到目標入住率`, d:`${targetOcBeds} 人（${Math.round(ramp.target*100)}%）`, v: startCap + rr.cum });
+  }
+  if (beRow) ms.push({ t:`M${beRow.m} 累計現金流轉正`, d:'開始回收前期投資', v: startCap + beRow.cum, pos:true });
+
+  const phHd = (bg, color, txt) =>
+    `<div style="font-size:12px;font-weight:700;color:${color};background:${bg};border-radius:4px;padding:5px 10px;margin-bottom:8px">${txt}</div>`;
+  const row2 = (l, r, rStyle='') =>
+    `<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12px;padding:2px 0">
+       <span style="color:#4b5563">${l}</span><span style="font-weight:600;${rStyle}">${r}</span></div>`;
+  const desc = t => `<div style="font-size:11px;color:#9ca3af;margin-bottom:8px;line-height:1.6">${t}</div>`;
+
+  fsel.innerHTML = `<div style="background:#fff;border:1px solid var(--gray-200);border-radius:8px;margin-top:16px;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:12px 16px;font-size:14px;font-weight:700">💰 籌備資金規劃建議</div>
+  <div style="padding:14px 16px">
+
+    <div style="margin-bottom:14px">
+      ${phHd('var(--blue-light)','var(--blue-dark)','▌ 第一階段：設立許可申請前（建設籌備期）')}
+      ${desc('建物裝修、消防設備申報與安裝、醫療器材採購，須在衛生局現勘、設立許可核發前全部完成到位。此為<strong>一次性支出</strong>，開業後不再發生。')}
+      ${row2('前期建置支出（裝修＋消防＋設備）', '−'+fmt(setupTotal), 'color:var(--red)')}
+    </div>
+
+    <div style="margin-bottom:14px">
+      ${phHd('#fef3c7','#92400e','▌ 第二階段：開業後爬坡期（M1 → '+mStable+'）')}
+      ${desc('開業即需全額支付人事與固定成本，收入隨入住率逐月攀升。此階段每月盈虧可能仍為負，帳戶現金持續消耗直至入住率達標。')}
+      ${row2('每月人事成本（含勞健保，固定）', '約 '+fmt(staffTotal)+' / 月')}
+      ${row2('每月固定營運成本（租金、行政等，固定）', '約 '+fmt(otherFixed)+' / 月')}
+      ${row2('每月變動成本（餐費＋水電，依入住率）', '約 '+fmt(varPer)+' × 實際入住人數 / 月', 'color:var(--gray-500);font-weight:400')}
+      ${operatingGap > 0
+        ? row2('爬坡期累計最大現金缺口（'+mLow+' 最低點）', '−'+fmt(operatingGap), 'color:var(--red)')
+        : `<div style="font-size:12px;color:var(--green);padding:2px 0">✓ 開業首月即盈利，爬坡期無額外現金缺口</div>`}
+    </div>
+
+    <div style="margin-bottom:14px">
+      ${phHd('#dcfce7','#15803d','▌ 第三階段：穩定期（'+mStable+' 達到目標入住率後）')}
+      ${row2('每月盈虧（穩定後）', fmt(stablePnl)+' / 月', stablePnl>=0?'color:var(--green)':'color:var(--red)')}
+      ${row2('累計現金流回正（回收所有前期投資）', mBe, beRow?'color:var(--green)':'')}
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--gray-700);margin-bottom:8px">📊 可用資金實際狀況預估</div>
+      ${desc('以下以「建議籌備資金總額」作為開業前帳戶初始資金計算')}
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr style="background:var(--gray-100)">
+          <th style="padding:5px 8px;text-align:left;font-weight:600;color:var(--gray-600)">時間點</th>
+          <th style="padding:5px 8px;text-align:left;font-weight:600;color:var(--gray-600);font-size:11px">說明</th>
+          <th style="padding:5px 8px;text-align:right;font-weight:600;color:var(--gray-600)">帳戶可用資金</th>
+        </tr></thead>
+        <tbody>${ms.map(m=>`<tr style="${m.warn?'background:#fff1f2':m.pos?'background:#f0fdf4':''}">
+          <td style="padding:5px 8px;font-weight:${m.warn||m.pos?700:400}">${m.t}</td>
+          <td style="padding:5px 8px;color:var(--gray-400);font-size:11px">${m.d}</td>
+          <td style="padding:5px 8px;text-align:right;font-weight:700;${m.warn?'color:var(--red)':m.pos?'color:var(--green)':''}">${fmt(m.v)}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+
+    ${minReserve===0
+      ? `<div style="background:#fef3c7;border-left:3px solid #d97706;padding:8px 12px;border-radius:0 4px 4px 0;font-size:11px;color:#92400e;margin-bottom:12px">
+           ⚠ 尚未設定最低保留現金緩衝，建議至少設定 2〜3 個月固定成本（約 ${fmt(fixedMonthly*2)}〜${fmt(fixedMonthly*3)}）
+         </div>`
+      : row2('最低保留現金緩衝（警戒線）', fmt(minReserve))
+    }
+
+    <div style="border-top:2px solid var(--blue);margin-top:10px;padding-top:12px;display:flex;justify-content:space-between;align-items:baseline">
+      <span style="font-size:14px;font-weight:700;color:var(--blue-dark)">建議開業前準備資金總額</span>
+      <span style="font-size:24px;font-weight:800;color:var(--blue);font-variant-numeric:tabular-nums">${fmt(suggested)}</span>
+    </div>
+    <div style="font-size:10px;color:var(--gray-400);margin-top:5px;line-height:1.7">
+      前期建置（${fmt(setupTotal)}）＋ 爬坡期最大現金缺口（${fmt(operatingGap)}）＋ 保留緩衝（${fmt(minReserve)}）
+      <br>此金額可確保帳戶在最低點（${mLow}）時仍保有 ${fmt(Math.max(0, startCap+minCum))} 的安全緩衝。
+    </div>
+  </div>
+</div>`;
 }
 
 function renderCfChart(rows) {
