@@ -285,7 +285,7 @@ input[type=range]{flex:1;accent-color:var(--blue)}
       <h1>精神醫療機構經營成本計算器</h1>
       <p>依設置基準法規 · 自動計算最低法定人員 · 快速試算月度 / 年度經營成本 · 損益分析</p>
     </div>
-    <button class="no-print" onclick="window.print()" style="flex-shrink:0;height:32px;padding:0 14px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;margin-top:2px">列印 / PDF</button>
+    <button class="no-print" onclick="exportPDF()" style="flex-shrink:0;height:32px;padding:0 14px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;margin-top:2px">匯出 PDF</button>
   </div>
 </div>
 <div class="wrap">
@@ -1854,6 +1854,25 @@ window.addEventListener('resize',()=>{ if(_cfRows.length) renderCfChart(_cfRows)
 
 calc();
 renderProfileSelect();
+
+function exportPDF(){
+  const btn = document.querySelector('button.no-print');
+  btn.disabled = true;
+  btn.textContent = '產生中…';
+  const el = document.querySelector('.wrap');
+  const opt = {
+    margin: [10,10,10,10],
+    filename: '精神醫療機構經營成本試算.pdf',
+    image: {type:'jpeg', quality:0.95},
+    html2canvas: {scale:2, useCORS:true, scrollY:0},
+    jsPDF: {unit:'mm', format:'a4', orientation:'portrait'}
+  };
+  html2pdf().set(opt).from(el).save().then(()=>{
+    btn.disabled = false;
+    btn.textContent = '匯出 PDF';
+  });
+}
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </body>
 </html>
