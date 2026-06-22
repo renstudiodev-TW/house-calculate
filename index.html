@@ -454,8 +454,8 @@ input[type=range]{flex:1;accent-color:var(--blue)}
     <div class="ch s">其他月度成本</div>
     <div class="cb">
       <div class="crow"><span class="clabel">房屋租金</span>
-        <div class="cinput"><input type="number" id="c_rent"   value="50000" oninput="recalc()"><span class="sfx">元/月（未稅）</span></div></div>
-      <div class="rent-tax-hint">實際支出：<strong id="rent_actual_display">$55,550</strong>（含屋主轉嫁稅負 10% 租金所得稅 + 2.11% 二代健保，共 +12.11%）</div>
+        <div class="cinput"><input type="number" id="c_rent"   value="55550" oninput="recalc()"><span class="sfx">元/月（含稅實付）</span></div></div>
+      <div class="rent-tax-hint">未稅租金約 <strong id="rent_untaxed_display">$49,549</strong>（輸入金額已含屋主轉嫁 10% 租金所得稅＋2.11% 二代健保，共 12.11%）</div>
       <div class="crow"><span class="clabel">水費（每床/人）</span>
         <div class="cinput"><input type="number" id="c_water" value="1000" oninput="recalc()"><span class="sfx">元/月</span></div></div>
       <div class="crow"><span class="clabel">電費（每床/人）</span>
@@ -1003,9 +1003,8 @@ function recalc() {
 
   const food = foodPer * ocBeds;
   const util = (water + elec) * ocBeds;
-  const rentActual = rent * 1.1211;
-  const fac  = rentActual;
-  document.getElementById('rent_actual_display').textContent = '$' + fmt(Math.round(rentActual));
+  const fac  = rent;  // 直接輸入含稅實付金額
+  document.getElementById('rent_untaxed_display').textContent = fmt(Math.round(rent / 1.1211));
   let adm    = supply + ins + admin + other;
   document.querySelectorAll('#monthly_custom .cs-amt').forEach(el => { adm += parseFloat(el.value)||0; });
   document.getElementById('otherSub').textContent = fmt(food + util + fac + adm);
@@ -1367,7 +1366,7 @@ function computeSummary(state) {
   });
   const food = (state.c_food||0)*ocBeds;
   const util = ((state.c_water!=null?state.c_water:1000)+(state.c_elec!=null?state.c_elec:2750))*ocBeds;
-  const fac  = (state.c_rent||0) * 1.1211;
+  const fac  = (state.c_rent||0);  // 含稅實付金額，直接採用
   const customMonthlyTotal = (state.customMonthly||[]).reduce((sum,item)=>sum+(item.amount||0),0);
   const adm  = (state.c_supply||0)+(state.c_ins||0)+(state.c_admin||0)+(state.c_other||0)+customMonthlyTotal;
   const setupIds = ['s_reno','s_fire','s_fire2','s_arch','s_dep'];
