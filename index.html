@@ -609,6 +609,14 @@ input[type=range]{flex:1;accent-color:var(--blue)}
       <div style="font-weight:700;color:var(--green);margin-bottom:8px;font-size:13px;display:flex;align-items:center;gap:6px">
         💡 戰略調整面板（實務現金流優化）
       </div>
+      <div style="margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed #bbf7d0">
+        <label class="lbl">預計第幾個月通過設立許可（開始收案）</label>
+        <div class="ig">
+          <input type="number" id="cf_approvalDelay" value="0" min="0" max="24" oninput="recalc()">
+          <span class="sfx">個月後</span>
+        </div>
+        <div style="font-size:10px;color:var(--gray-500);margin-top:2px">建置完成到核准前為待核准期，期間照付租金等固定成本卻無收入。設 0 代表 M1 即可收案。</div>
+      </div>
       <div class="g2" style="margin-bottom:0;gap:12px">
         <div>
           <label class="lbl">政府補助款延遲入帳</label>
@@ -1281,7 +1289,7 @@ function collectState() {
     s_design:get('s_design'), s_lic:get('s_lic'), s_dep:get('s_dep'), s_other2:get('s_other2'),
     amortYears:get('amortYears'), inclAmort:get('inclAmort'),
     r_nhi:get('r_nhi'), r_self:get('r_self'), r_other:get('r_other'),
-    cf_subsidyDelay:get('cf_subsidyDelay'), cf_unpaidMonths:get('cf_unpaidMonths'), cf_dynamicHiring:document.getElementById('cf_dynamicHiring')?.checked,
+    cf_approvalDelay:get('cf_approvalDelay'), cf_subsidyDelay:get('cf_subsidyDelay'), cf_unpaidMonths:get('cf_unpaidMonths'), cf_dynamicHiring:document.getElementById('cf_dynamicHiring')?.checked,
     cf_r1end:get('cf_r1end'), cf_r1occ:get('cf_r1occ'), cf_r2end:get('cf_r2end'), cf_r2occ:get('cf_r2occ'),
     cf_mode: getCfMode(), cf_init:get('cf_init'), cf_delta:get('cf_delta'),
     cf_minReserve:get('cf_minReserve'),
@@ -1313,6 +1321,7 @@ function applyState(state) {
   set('s_design',state.s_design||0); set('s_lic',state.s_lic||0); set('s_dep',state.s_dep||0);
   set('s_other2',state.s_other2||0); set('amortYears',state.amortYears||5); set('inclAmort',state.inclAmort||false);
   set('r_nhi',state.r_nhi!=null?state.r_nhi:16000); set('r_self',state.r_self!=null?state.r_self:5000); set('r_other',state.r_other||0);
+  set('cf_approvalDelay',state.cf_approvalDelay!=null?state.cf_approvalDelay:0);
   set('cf_subsidyDelay',state.cf_subsidyDelay!=null?state.cf_subsidyDelay:1);
   set('cf_unpaidMonths',state.cf_unpaidMonths!=null?state.cf_unpaidMonths:6);
   const dh=document.getElementById('cf_dynamicHiring'); if(dh) dh.checked=state.cf_dynamicHiring!=null?state.cf_dynamicHiring:true;
@@ -1682,6 +1691,16 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
   const dynamicHiring = document.getElementById('cf_dynamicHiring')?.checked || false;
   const unpaidMonths = parseInt(document.getElementById('cf_unpaidMonths')?.value)||0;
   const subsidyDelay = parseInt(document.getElementById('cf_subsidyDelay')?.value)||0;
+  const approvalDelay = parseInt(document.getElementById('cf_approvalDelay')?.value)||0;
+
+  // 依「營運月」（核准後第幾個月開始收案）回推某月的在住人數
+  const occAt = (om) => {
+    if (om < 1) return 0;
+    if (isLinear) return Math.max(0, Math.round(Math.min(linear.init + (om-1)*linear.delta, beds)));
+    const {r1end,r1occ,r2end,r2occ,target}=ramp;
+    const rate = om<=r1end?r1occ:om<=r2end?r2occ:target;
+    return Math.round(beds*rate);
+  };
 
   let cum=-setupTotal; _cfSetup=setupTotal;
   _cfRows=[{m:0,cum:-setupTotal, staff:0}]; _cfMinReserve=minReserve;
@@ -1691,30 +1710,12 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
   let html=`<table class="scen-tbl"><thead><tr><th>月份</th><th>在住人數</th><th>入住率</th><th>月收入</th><th>月成本</th><th>月盈虧</th><th>累計現金流</th></tr></thead><tbody>`;
 
   for(let m=1;m<=MAX_MONTHS;m++){
-    let ocBeds;
-    // 1. 計算當月實際在住人數
-    if(isLinear){
-      ocBeds=Math.min(linear.init + (m-1)*linear.delta, beds);
-      ocBeds=Math.max(0, Math.round(ocBeds));
-    } else {
-      const {r1end,r1occ,r2end,r2occ,target}=ramp;
-      const rate=m<=r1end?r1occ:m<=r2end?r2occ:target;
-      ocBeds=Math.round(beds*rate);
-    }
-    if (reachedAt===null && ocBeds>=targetOcBeds) reachedAt=m;
+    // 1. 當月實際在住人數（核准後才開始收案，營運月 = m - approvalDelay）
+    const ocBeds = occAt(m - approvalDelay);
+    if (reachedAt===null && targetOcBeds>0 && ocBeds>=targetOcBeds) reachedAt=m;
 
-    // 2. 計算延遲補助款對應的人數 (NHI 延遲入帳)
-    let delayedOcBeds = 0;
-    const dm = m - subsidyDelay;
-    if (dm > 0) {
-        if (isLinear) {
-            delayedOcBeds = Math.min(linear.init + (dm - 1) * linear.delta, beds);
-        } else {
-            const drate = dm <= ramp.r1end ? ramp.r1occ : dm <= ramp.r2end ? ramp.r2occ : ramp.target;
-            delayedOcBeds = beds * drate;
-        }
-        delayedOcBeds = Math.max(0, Math.round(delayedOcBeds));
-    }
+    // 2. 延遲補助款對應的人數（NHI 延遲入帳，再往前推 subsidyDelay 個月）
+    const delayedOcBeds = occAt(m - approvalDelay - subsidyDelay);
 
     // 3. 動態計算當月人事成本
     let monthlyStaffCost = 0;
@@ -1760,12 +1761,15 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
     const pc=pnl>0?'pnl-pos':pnl<0?'pnl-neg':'';
     const cc=cum>0?'pnl-pos':cum<0?'pnl-neg':'';
     const belowReserve = minReserve>0 && cum < -minReserve;
+    const isWaiting = m <= approvalDelay;
+    const waitingStyle = isWaiting ? 'background:#fef9c3;color:var(--gray-600)' : '';
     const stableStyle = (reachedAt!==null && m>reachedAt) ? 'background:#f9fafb;color:var(--gray-500)' : '';
-    const rowStyle = belowReserve ? 'background:#fff1f2' : stableStyle;
+    const rowStyle = belowReserve ? 'background:#fff1f2' : (waitingStyle || stableStyle);
 
-    html+=`<tr style="${rowStyle}"><td>M${m}${belowReserve?'  ⚠':''}  </td><td style="text-align:center;font-weight:700">${ocBeds}</td><td>${Math.round(rate2*100)}%</td>
+    html+=`<tr style="${rowStyle}"><td>M${m}${isWaiting?' 待核准':''}${belowReserve?'  ⚠':''}  </td><td style="text-align:center;font-weight:700">${ocBeds}</td><td>${Math.round(rate2*100)}%</td>
       <td>${fmt(rev)}</td><td>${fmt(cost)}</td>
       <td class="${pc}">${fmt(pnl)}</td><td class="${cc} fw7">${fmt(cum)}</td></tr>`;
+    if (approvalDelay>0 && m===approvalDelay) html+=`<tr><td colspan="7" style="text-align:center;font-size:10px;padding:3px 0;background:#dbeafe;color:var(--blue-dark);font-weight:600">🏛 M${approvalDelay+1} 通過設立許可，開始收案 ↓</td></tr>`;
     if (m===reachedAt) html+=`<tr><td colspan="7" style="text-align:center;font-size:10px;padding:3px 0;background:#f0fdf4;color:var(--green);font-weight:600">✓ 達到收案上限（${ocBeds} 人 / ${Math.round(rate2*100)}%）— 以下為穩定期</td></tr>`;
     if (reachedAt!==null && m>=reachedAt+STABLE_EXTRA) break;
   }
@@ -1789,11 +1793,17 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
   const mBe           = beRow ? `M${beRow.m}` : '60個月內未回正';
 
   // Key cash milestones
+  const openMonth = approvalDelay + 1;  // 核准後開始收案的月份
   const ms = [];
   ms.push({ t:'籌備完成（開業前）',  d:'前期建置支出後，正式向主管機關申請設立許可', v: startCap - setupTotal });
-  if (_cfRows[1]) {
+  if (approvalDelay > 0) {
+    const waitRow = _cfRows.find(r => r.m === approvalDelay);
+    if (waitRow) ms.push({ t:`待核准期（M1–M${approvalDelay}）`, d:'已建置完成尚未核准，照付租金等固定成本、無收入', v: startCap + waitRow.cum, warn:true });
+  }
+  const openRow = _cfRows.find(r => r.m === openMonth);
+  if (openRow) {
     const m1beds = isLinear ? Math.min(linear.init, beds) : Math.round(beds * ramp.r1occ);
-    ms.push({ t:'M1 開業首月', d:`初始入住 ${m1beds} 人`, v: startCap + _cfRows[1].cum });
+    ms.push({ t:`M${openMonth} ${approvalDelay>0?'核准成立・開始收案':'開業首月'}`, d:`初始入住 ${m1beds} 人`, v: startCap + openRow.cum });
   }
   if (minRow.m > 1) ms.push({ t:`${mLow} 現金最低點`, d:'爬坡期帳戶資金最低處', v: startCap + minCum, warn:true });
   if (reachedAt) {
@@ -1812,6 +1822,13 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
   const m1StaffCost = _cfRows[1] ? _cfRows[1].staff : staffTotal;
   const isOptimized = m1StaffCost < staffTotal;
 
+  const phase2Title = approvalDelay>0
+    ? `▌ 第二階段：待核准期 + 開業爬坡期（M1 待核准 → M${openMonth} 開業 → ${mStable} 達標）`
+    : `▌ 第二階段：開業後爬坡期（M1 → ${mStable}）`;
+  const phase2Desc = approvalDelay>0
+    ? `前 ${approvalDelay} 個月為待核准期，建置已完成但尚未獲准收案，期間照付租金等固定成本卻無收入；核准後（M${openMonth}）開始收案，收入隨入住率爬升。帳戶現金在此階段持續消耗直至達標。`
+    : '開業即需全額支付人事與固定成本，收入隨入住率逐月攀升。此階段每月盈虧可能仍為負，帳戶現金持續消耗直至入住率達標。';
+
   fsel.innerHTML = `<div style="background:#fff;border:1px solid var(--gray-200);border-radius:8px;margin-top:16px;overflow:hidden">
   <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:12px 16px;font-size:14px;font-weight:700">💰 籌備資金規劃建議</div>
   <div style="padding:14px 16px">
@@ -1823,8 +1840,8 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
     </div>
 
     <div style="margin-bottom:14px">
-      ${phHd('#fef3c7','#92400e','▌ 第二階段：開業後爬坡期（M1 → '+mStable+'）')}
-      ${desc('開業即需全額支付人事與固定成本，收入隨入住率逐月攀升。此階段每月盈虧可能仍為負，帳戶現金持續消耗直至入住率達標。')}
+      ${phHd('#fef3c7','#92400e',phase2Title)}
+      ${desc(phase2Desc)}
       ${row2('穩定期每月人事成本（滿編）', '約 '+fmt(staffTotal)+' / 月')}
       ${isOptimized ? row2('首月人事成本（經戰略優化）', '約 '+fmt(m1StaffCost)+' / 月', 'color:var(--green)') : ''}
       ${row2('每月固定營運成本（租金、行政等，固定）', '約 '+fmt(otherFixed)+' / 月')}
