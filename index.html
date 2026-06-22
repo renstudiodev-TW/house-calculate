@@ -445,7 +445,7 @@ input[type=range]{flex:1;accent-color:var(--blue)}
       </div>
       <div id="staffCostRows"></div>
       <div class="dv"></div>
-      <div class="bkr tot"><span>人力成本小計（月）</span><span id="staffSub">$0</span></div>
+      <div class="bkr tot"><span>人力成本小計（滿編月平均）</span><span id="staffSub">$0</span></div>
     </div>
   </div>
 
@@ -538,7 +538,7 @@ input[type=range]{flex:1;accent-color:var(--blue)}
   <div class="ch gd">經營成本總覽</div>
   <div class="cb">
     <div class="sg" style="grid-template-columns:repeat(4,1fr)">
-      <div class="sc"><div class="sl">月總成本</div><div class="sv b" id="sm_month">$0</div><div class="ss">元/月</div></div>
+      <div class="sc"><div class="sl">滿編月總成本</div><div class="sv b" id="sm_month">$0</div><div class="ss">元/月</div></div>
       <div class="sc"><div class="sl">年總成本</div><div class="sv b" id="sm_year">$0</div><div class="ss">元/年</div></div>
       <div class="sc"><div class="sl">每床月成本</div><div class="sv a" id="sm_perbed">$0</div><div class="ss">元/床/月</div></div>
       <div class="sc"><div class="sl">損益平衡收費</div><div class="sv r" id="sm_be">$0</div><div class="ss" id="sm_be_note">元/床/月</div></div>
@@ -571,7 +571,7 @@ input[type=range]{flex:1;accent-color:var(--blue)}
 <div class="card">
   <div class="ch g">收入設定與損益估算</div>
   <div class="cb">
-    <div class="note" style="margin-bottom:12px">健保 / 補助給付依衛福部公告調整；以下為參考預設值，請依實際合約修改。</div>
+    <div class="note" style="margin-bottom:12px">健保 / 政府補助金額因時間差會有延遲入帳的狀況，請於下方「現金流預測」設定延遲月數以精確推算資金缺口。</div>
     <div class="crow"><span class="clabel">健保 / 政府補助（每床 / 人 · 月）</span>
       <div class="cinput"><input type="number" id="r_nhi" value="16000" min="0" oninput="recalc()"><span class="sfx">元</span></div></div>
     <div class="crow"><span class="clabel">住民自費收費（每床 / 人 · 月）</span>
@@ -602,7 +602,40 @@ input[type=range]{flex:1;accent-color:var(--blue)}
 <div class="card">
   <div class="ch gd">現金流預測（爬坡至目標入住率）</div>
   <div class="cb">
-    <div class="info" style="margin-bottom:10px">以前期建置成本為第 0 月起始，依入住率爬坡累積月盈虧。穩定期月盈虧與上方「損益分析」一致。</div>
+    <div class="info" style="margin-bottom:10px">以前期建置成本為第 0 月起始，依入住率爬坡累積月盈虧。動態計算包含<b>撥款延遲</b>與<b>人事精簡</b>。</div>
+
+    <!-- ★ 新增：戰略調整面板 ★ -->
+    <div class="reg-panel" style="margin-bottom:12px;background:#f0fdf4;border-color:#86efac;">
+      <div style="font-weight:700;color:var(--green);margin-bottom:8px;font-size:13px;display:flex;align-items:center;gap:6px">
+        💡 戰略調整面板（實務現金流優化）
+      </div>
+      <div class="g2" style="margin-bottom:0;gap:12px">
+        <div>
+          <label class="lbl">政府補助款延遲入帳</label>
+          <div class="ig">
+            <input type="number" id="cf_subsidyDelay" value="1" min="0" max="6" oninput="recalc()">
+            <span class="sfx">個月</span>
+          </div>
+          <div style="font-size:10px;color:var(--gray-500);margin-top:2px">自費款當月入帳，補助款依此設定遞延。</div>
+        </div>
+        <div>
+          <label class="lbl">負責人初期不支薪（以工代墊）</label>
+          <div class="ig">
+            <input type="number" id="cf_unpaidMonths" value="6" min="0" max="24" oninput="recalc()">
+            <span class="sfx">個月</span>
+          </div>
+          <div style="font-size:10px;color:var(--gray-500);margin-top:2px">前 N 個月將自動扣除負責人薪水支出。</div>
+        </div>
+      </div>
+      <div style="margin-top:10px; border-top: 1px dashed #bbf7d0; padding-top: 8px;">
+        <label class="cbox" style="font-size:13px;font-weight:600">
+          <input type="checkbox" id="cf_dynamicHiring" checked onchange="recalc()">
+          啟用隨收案量動態增員（初期依最低排班需求用人，隨人數增加才滿編）
+        </label>
+      </div>
+    </div>
+    <!-- ★ 結束：戰略調整面板 ★ -->
+
     <div class="ramp-bar" style="margin-bottom:10px">
       <span style="font-weight:600">最低保留現金（警戒線）：</span>
       <input type="number" id="cf_minReserve" value="300000" min="0" oninput="recalc()" style="width:110px">
@@ -1249,6 +1282,7 @@ function collectState() {
     s_design:get('s_design'), s_lic:get('s_lic'), s_dep:get('s_dep'), s_other2:get('s_other2'),
     amortYears:get('amortYears'), inclAmort:get('inclAmort'),
     r_nhi:get('r_nhi'), r_self:get('r_self'), r_other:get('r_other'),
+    cf_subsidyDelay:get('cf_subsidyDelay'), cf_unpaidMonths:get('cf_unpaidMonths'), cf_dynamicHiring:document.getElementById('cf_dynamicHiring')?.checked,
     cf_r1end:get('cf_r1end'), cf_r1occ:get('cf_r1occ'), cf_r2end:get('cf_r2end'), cf_r2occ:get('cf_r2occ'),
     cf_mode: getCfMode(), cf_init:get('cf_init'), cf_delta:get('cf_delta'),
     cf_minReserve:get('cf_minReserve'),
@@ -1280,6 +1314,9 @@ function applyState(state) {
   set('s_design',state.s_design||0); set('s_lic',state.s_lic||0); set('s_dep',state.s_dep||0);
   set('s_other2',state.s_other2||0); set('amortYears',state.amortYears||5); set('inclAmort',state.inclAmort||false);
   set('r_nhi',state.r_nhi!=null?state.r_nhi:16000); set('r_self',state.r_self!=null?state.r_self:5000); set('r_other',state.r_other||0);
+  set('cf_subsidyDelay',state.cf_subsidyDelay!=null?state.cf_subsidyDelay:1);
+  set('cf_unpaidMonths',state.cf_unpaidMonths!=null?state.cf_unpaidMonths:6);
+  const dh=document.getElementById('cf_dynamicHiring'); if(dh) dh.checked=state.cf_dynamicHiring!=null?state.cf_dynamicHiring:true;
   set('cf_r1end',state.cf_r1end||3); set('cf_r1occ',state.cf_r1occ||40); set('cf_r2end',state.cf_r2end||6); set('cf_r2occ',state.cf_r2occ||65);
   set('cf_init',state.cf_init||0); set('cf_delta',state.cf_delta||3);
   set('cf_minReserve',state.cf_minReserve!=null?state.cf_minReserve:300000);
@@ -1641,14 +1678,22 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
   if (!el) return;
   if (beds < 1) { el.innerHTML=''; return; }
   const isLinear = getCfMode()==='linear';
+  const baseFixedNonStaff = fixedMonthly - staffTotal; // 扣除死板的人事費，改由下方動態計算
+  const burden = 1 + (parseFloat(document.getElementById('burden').value)||0)/100;
+  const dynamicHiring = document.getElementById('cf_dynamicHiring')?.checked || false;
+  const unpaidMonths = parseInt(document.getElementById('cf_unpaidMonths')?.value)||0;
+  const subsidyDelay = parseInt(document.getElementById('cf_subsidyDelay')?.value)||0;
+
   let cum=-setupTotal; _cfSetup=setupTotal;
-  _cfRows=[{m:0,cum:-setupTotal}]; _cfMinReserve=minReserve;
+  _cfRows=[{m:0,cum:-setupTotal, staff:0}]; _cfMinReserve=minReserve;
   const targetOcBeds = Math.round(beds * ramp.target);
   const STABLE_EXTRA = 2, MAX_MONTHS = 60;
   let reachedAt = null;
   let html=`<table class="scen-tbl"><thead><tr><th>月份</th><th>在住人數</th><th>入住率</th><th>月收入</th><th>月成本</th><th>月盈虧</th><th>累計現金流</th></tr></thead><tbody>`;
+
   for(let m=1;m<=MAX_MONTHS;m++){
     let ocBeds;
+    // 1. 計算當月實際在住人數
     if(isLinear){
       ocBeds=Math.min(linear.init + (m-1)*linear.delta, beds);
       ocBeds=Math.max(0, Math.round(ocBeds));
@@ -1658,17 +1703,67 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
       ocBeds=Math.round(beds*rate);
     }
     if (reachedAt===null && ocBeds>=targetOcBeds) reachedAt=m;
+
+    // 2. 計算延遲補助款對應的人數 (NHI 延遲入帳)
+    let delayedOcBeds = 0;
+    const dm = m - subsidyDelay;
+    if (dm > 0) {
+        if (isLinear) {
+            delayedOcBeds = Math.min(linear.init + (dm - 1) * linear.delta, beds);
+        } else {
+            const drate = dm <= ramp.r1end ? ramp.r1occ : dm <= ramp.r2end ? ramp.r2occ : ramp.target;
+            delayedOcBeds = beds * drate;
+        }
+        delayedOcBeds = Math.max(0, Math.round(delayedOcBeds));
+    }
+
+    // 3. 動態計算當月人事成本
+    let monthlyStaffCost = 0;
+    currentStaff.forEach((s, i) => {
+        if (s.offsetted) return;
+        let sal = 0;
+        if (s.ft) sal = parseFloat(document.getElementById('sal_'+i)?.value)||0;
+        else sal = (parseFloat(document.getElementById('hr_'+i)?.value)||0) * (parseFloat(document.getElementById('hrs_'+i)?.value)||0) * 4.33;
+
+        let cnt = parseInt(document.getElementById('cnt_'+i)?.value)||0;
+        const plannedCnt = cnt;
+
+        // 套用動態增員策略
+        if (dynamicHiring && s.ft && ocBeds > 0) {
+            if (typeIdx === 0 && s.key === 'manager') cnt = Math.min(plannedCnt, Math.max(3, Math.ceil(ocBeds / 10)));
+            if (typeIdx === 1 && s.key === 'manager') cnt = Math.min(plannedCnt, Math.max(1, Math.ceil(ocBeds / 15)));
+            if (typeIdx === 2 && s.key === 'nurse') cnt = Math.min(plannedCnt, Math.max(3, Math.ceil(ocBeds / 20)));
+            if (typeIdx === 2 && s.key === 'caregiver') cnt = Math.min(plannedCnt, Math.max(3, Math.ceil(ocBeds / 10)));
+        } else if (dynamicHiring && s.ft && ocBeds === 0) {
+            // 收案為 0 時的最低編制要求
+            if (typeIdx === 0 && s.key === 'manager') cnt = Math.min(plannedCnt, 3);
+            if (typeIdx === 1 && s.key === 'manager') cnt = Math.min(plannedCnt, 1);
+            if (typeIdx === 2 && s.key === 'nurse') cnt = Math.min(plannedCnt, 3);
+            if (typeIdx === 2 && s.key === 'caregiver') cnt = Math.min(plannedCnt, 3);
+        }
+
+        // 負責人不支薪策略
+        if (s.key === 'director' && m <= unpaidMonths) {
+            sal = 0;
+        }
+
+        monthlyStaffCost += cnt * sal * burden;
+    });
+
     const rate2=beds>0?ocBeds/beds:0;
-    const rev=(nhiPerBed+selfPerBed)*ocBeds+otherRev;
-    const cost=fixedMonthly+varPer*ocBeds;
+    const rev=(selfPerBed*ocBeds)+(nhiPerBed*delayedOcBeds)+otherRev;
+    const cost=baseFixedNonStaff+varPer*ocBeds+monthlyStaffCost;
     const pnl=rev-cost;
     cum+=pnl;
-    _cfRows.push({m,cum});
+
+    _cfRows.push({m, cum, staff: monthlyStaffCost});
+
     const pc=pnl>0?'pnl-pos':pnl<0?'pnl-neg':'';
     const cc=cum>0?'pnl-pos':cum<0?'pnl-neg':'';
     const belowReserve = minReserve>0 && cum < -minReserve;
     const stableStyle = (reachedAt!==null && m>reachedAt) ? 'background:#f9fafb;color:var(--gray-500)' : '';
     const rowStyle = belowReserve ? 'background:#fff1f2' : stableStyle;
+
     html+=`<tr style="${rowStyle}"><td>M${m}${belowReserve?'  ⚠':''}  </td><td style="text-align:center;font-weight:700">${ocBeds}</td><td>${Math.round(rate2*100)}%</td>
       <td>${fmt(rev)}</td><td>${fmt(cost)}</td>
       <td class="${pc}">${fmt(pnl)}</td><td class="${cc} fw7">${fmt(cum)}</td></tr>`;
@@ -1687,7 +1782,7 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
   const operatingGap  = Math.max(0, -minCum - setupTotal);
   const suggested     = Math.abs(minCum) + minReserve;
   const startCap      = suggested;
-  const otherFixed    = fixedMonthly - staffTotal;
+  const otherFixed    = baseFixedNonStaff;
   const stablePnl     = (nhiPerBed+selfPerBed)*targetOcBeds + otherRev - fixedMonthly - varPer*targetOcBeds;
   const beRow         = _cfRows.find(r => r.m > 0 && r.cum >= 0);
   const mLow          = minRow.m === 0 ? '開業前' : `M${minRow.m}`;
@@ -1715,6 +1810,9 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
        <span style="color:#4b5563">${l}</span><span style="font-weight:600;${rStyle}">${r}</span></div>`;
   const desc = t => `<div style="font-size:11px;color:#9ca3af;margin-bottom:8px;line-height:1.6">${t}</div>`;
 
+  const m1StaffCost = _cfRows[1] ? _cfRows[1].staff : staffTotal;
+  const isOptimized = m1StaffCost < staffTotal;
+
   fsel.innerHTML = `<div style="background:#fff;border:1px solid var(--gray-200);border-radius:8px;margin-top:16px;overflow:hidden">
   <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:12px 16px;font-size:14px;font-weight:700">💰 籌備資金規劃建議</div>
   <div style="padding:14px 16px">
@@ -1728,9 +1826,10 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
     <div style="margin-bottom:14px">
       ${phHd('#fef3c7','#92400e','▌ 第二階段：開業後爬坡期（M1 → '+mStable+'）')}
       ${desc('開業即需全額支付人事與固定成本，收入隨入住率逐月攀升。此階段每月盈虧可能仍為負，帳戶現金持續消耗直至入住率達標。')}
-      ${row2('每月人事成本（含勞健保，固定）', '約 '+fmt(staffTotal)+' / 月')}
+      ${row2('穩定期每月人事成本（滿編）', '約 '+fmt(staffTotal)+' / 月')}
+      ${isOptimized ? row2('首月人事成本（經戰略優化）', '約 '+fmt(m1StaffCost)+' / 月', 'color:var(--green)') : ''}
       ${row2('每月固定營運成本（租金、行政等，固定）', '約 '+fmt(otherFixed)+' / 月')}
-      ${row2('每月變動成本（餐費＋水電，依入住率）', '約 '+fmt(varPer)+' × 實際入住人數 / 月', 'color:var(--gray-500);font-weight:400')}
+      ${row2('每月變動成本（餐費＋水電，依入住率）', '約 '+fmt(varPer)+' × 實際人數 / 月', 'color:var(--gray-500);font-weight:400')}
       ${operatingGap > 0
         ? row2('爬坡期累計最大現金缺口（'+mLow+' 最低點）', '−'+fmt(operatingGap), 'color:var(--red)')
         : `<div style="font-size:12px;color:var(--green);padding:2px 0">✓ 開業首月即盈利，爬坡期無額外現金缺口</div>`}
@@ -1761,8 +1860,8 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
 
     ${minReserve===0
       ? `<div style="background:#fef3c7;border-left:3px solid #d97706;padding:8px 12px;border-radius:0 4px 4px 0;font-size:11px;color:#92400e;margin-bottom:12px">
-           ⚠ 尚未設定最低保留現金緩衝，建議至少設定 2〜3 個月固定成本（約 ${fmt(fixedMonthly*2)}〜${fmt(fixedMonthly*3)}）
-         </div>`
+            ⚠ 尚未設定最低保留現金緩衝，建議至少設定 2〜3 個月固定成本（約 ${fmt(fixedMonthly*2)}〜${fmt(fixedMonthly*3)}）
+          </div>`
       : row2('最低保留現金緩衝（警戒線）', fmt(minReserve))
     }
 
