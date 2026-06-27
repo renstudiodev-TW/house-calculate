@@ -1698,7 +1698,8 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
     if (om < 1) return 0;
     if (isLinear) return Math.max(0, Math.round(Math.min(linear.init + (om-1)*linear.delta, beds)));
     const {r1end,r1occ,r2end,r2occ,target}=ramp;
-    const rate = om<=r1end?r1occ:om<=r2end?r2occ:target;
+    // 爬坡階段不得超過目標入住率（收案上限），避免中段衝過上限再掉回
+    const rate = Math.min(om<=r1end?r1occ:om<=r2end?r2occ:target, target);
     return Math.round(beds*rate);
   };
 
@@ -1802,7 +1803,7 @@ function renderCashFlow({setupTotal, fixedMonthly, varPer, staffTotal=0, beds, n
   }
   const openRow = _cfRows.find(r => r.m === openMonth);
   if (openRow) {
-    const m1beds = isLinear ? Math.min(linear.init, beds) : Math.round(beds * ramp.r1occ);
+    const m1beds = isLinear ? Math.min(linear.init, beds) : Math.round(beds * Math.min(ramp.r1occ, ramp.target));
     ms.push({ t:`M${openMonth} ${approvalDelay>0?'核准成立・開始收案':'開業首月'}`, d:`初始入住 ${m1beds} 人`, v: startCap + openRow.cum });
   }
   if (minRow.m > 1) ms.push({ t:`${mLow} 現金最低點`, d:'爬坡期帳戶資金最低處', v: startCap + minCum, warn:true });
